@@ -1,4 +1,4 @@
-CREATE TABLE budgets (
+    CREATE TABLE budgets (
     id          BIGSERIAL PRIMARY KEY,
     name        VARCHAR(120)   NOT NULL,
     amount      NUMERIC(19, 2) NOT NULL CHECK (amount >= 0),
