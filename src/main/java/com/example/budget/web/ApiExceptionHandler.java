@@ -7,7 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -36,5 +36,15 @@ public class ApiExceptionHandler {
     @ExceptionHandler(RateNotAvailableException.class)
     public ProblemDetail rateMissing(RateNotAvailableException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
+    }
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ProblemDetail paramValidation(HandlerMethodValidationException e) {
+        String name = e.getAllValidationResults().stream()
+                .map(r -> r.getMethodParameter().getParameterName())
+                .filter(n -> n != null)
+                .findFirst()
+                .orElse("?");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Некоректне значення параметра '" + name + "'");
     }
 }
