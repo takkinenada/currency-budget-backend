@@ -8,7 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+import java.time.Instant;
 import java.math.BigDecimal;
 
 /**
@@ -18,6 +18,16 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "components")
 public class PcComponent {
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "store_name", length = 32)
+    private StoreType storeName;
+
+    @Column(name = "in_stock", nullable = false)
+    private boolean inStock = true;
+
+    @Column(name = "price_updated_at")
+    private Instant priceUpdatedAt;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,7 +80,7 @@ public class PcComponent {
     @Column(name = "tech_score", nullable = false)
     private int techScore;
 
-    @Column(name = "shop_url", length = 500)
+    @Column(name = "shop_url", length = 1024)
     private String shopUrl;
 
     protected PcComponent() {
@@ -156,6 +166,38 @@ public class PcComponent {
 
     public String getShopUrl() {
         return shopUrl;
+    }
+
+    public StoreType getStoreName() {
+        return storeName;
+    }
+
+    public boolean isInStock() {
+        return inStock;
+    }
+
+    public Instant getPriceUpdatedAt() {
+        return priceUpdatedAt;
+    }
+
+    public void setPriceUah(BigDecimal priceUah) {
+        this.priceUah = priceUah;
+    }
+
+    public void setShopUrl(String shopUrl) {
+        this.shopUrl = shopUrl;
+    }
+
+    public void setStoreName(StoreType storeName) {
+        this.storeName = storeName;
+    }
+
+    public void setInStock(boolean inStock) {
+        this.inStock = inStock;
+    }
+
+    public void setPriceUpdatedAt(Instant priceUpdatedAt) {
+        this.priceUpdatedAt = priceUpdatedAt;
     }
 
     @Override

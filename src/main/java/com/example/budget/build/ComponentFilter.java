@@ -20,6 +20,7 @@ public final class ComponentFilter {
     private final Set<Brand> cpuBrands = EnumSet.noneOf(Brand.class);
     private final Set<Brand> gpuBrands = EnumSet.noneOf(Brand.class);
     private final Set<Brand> makers = EnumSet.noneOf(Brand.class);
+    public Object accepts;
 
     private ComponentFilter(Set<Brand> selected) {
         if (selected != null) {
@@ -45,6 +46,9 @@ public final class ComponentFilter {
     }
 
     public boolean accepts(PcComponent c) {
+        if (!c.isInStock()) {
+            return false;
+        }
         return switch (c.getType()) {
             case CPU -> brandAccepted(cpuBrands, c);
             case GPU -> brandAccepted(gpuBrands, c);
