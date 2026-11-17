@@ -3,6 +3,7 @@ package com.example.budget.service;
 import com.example.budget.model.Currency;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 
@@ -14,16 +15,10 @@ class CurrencyConversionServiceTest {
 
     @BeforeEach
     void setUp() {
-        ExchangeRateService rates = new ExchangeRateService(null, null) {
-            @Override
-            public BigDecimal rateToUah(Currency currency) {
-                return switch (currency) {
-                    case UAH -> BigDecimal.ONE;
-                    case USD -> new BigDecimal("40.00");
-                    case EUR -> new BigDecimal("50.00");
-                };
-            }
-        };
+        ExchangeRateService rates = Mockito.mock(ExchangeRateService.class);
+        Mockito.when(rates.rateToUah(Currency.UAH)).thenReturn(BigDecimal.ONE);
+        Mockito.when(rates.rateToUah(Currency.USD)).thenReturn(new BigDecimal("40.00"));
+        Mockito.when(rates.rateToUah(Currency.EUR)).thenReturn(new BigDecimal("50.00"));
         service = new CurrencyConversionService(rates);
     }
 

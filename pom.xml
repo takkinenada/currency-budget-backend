@@ -12,7 +12,7 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>PCPicker</artifactId>
+    <artifactId>currency-budget-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>currency-budget-backend</name>
     <description>Backend: budget + automatic currency conversion (UAH, USD, EUR)</description>
