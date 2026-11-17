@@ -27,6 +27,11 @@ nbu:
   # оновлення курсів: щодня о 16:30 за київським часом (НБУ публікує курс на наступний день після ~15:00)
   refresh-cron: "0 30 16 * * *"
   zone: Europe/Kyiv
+
 prices:
   refresh-cron: "0 0 */6 * * *"
   request-delay-ms: 500
+
+monetization:
+    affiliate-tag: pcpicker
+    utm-medium: affiliate

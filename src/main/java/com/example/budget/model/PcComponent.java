@@ -204,4 +204,22 @@ public class PcComponent {
     public String toString() {
         return type + ": " + name;
     }
+
+    @Column(nullable = false)
+    private boolean sponsored = false;
+
+    @Column(name = "promo_label", length = 64)
+    private String promoLabel;
+
+    @Column(name = "sponsor_priority", nullable = false)
+    private int sponsorPriority = 0;
+
+    public boolean isSponsored() { return sponsored; }
+    public void setSponsored(boolean sponsored) { this.sponsored = sponsored; }
+
+    public String getPromoLabel() { return promoLabel; }
+    public void setPromoLabel(String promoLabel) { this.promoLabel = promoLabel; }
+
+    public int getSponsorPriority() { return sponsorPriority; }
+    public void setSponsorPriority(int sponsorPriority) { this.sponsorPriority = sponsorPriority; }
 }

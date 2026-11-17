@@ -7,4 +7,8 @@ import java.util.List;
 
 public interface PcComponentRepository extends JpaRepository<PcComponent, Long> {
     List<PcComponent> findByTypeAndInStockTrue(ComponentType type);
+
+    List<PcComponent> findAllByOrderBySponsoredDescSponsorPriorityDescIdAsc();
+
+    List<PcComponent> findByTypeOrderBySponsoredDescSponsorPriorityDescIdAsc(ComponentType type);
 }
