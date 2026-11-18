@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0E1116">
     <title>PCPicker — Підбери ПК під свій бюджет</title>
+
+    <!-- Оптимізоване неблокуюче підключення шрифтів -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap">
+
+    <!-- Легкий інлайн SVG-фавікон (0 зайвих HTTP-запитів) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23B6F24A'/%3E%3C/svg%3E">
+
     <link rel="stylesheet" href="/style.css">
+    <script src="/app.js" defer></script>
 </head>
 <body>
 <header class="header">
@@ -38,7 +49,7 @@
 
 <main class="main">
     <div class="container">
-        <!-- Hero (приховується після генерації збірок, як у макеті Результат) -->
+        <!-- Hero -->
         <section class="hero" id="heroSection">
             <h1 class="hero__title">Підбери ПК під свій бюджет</h1>
             <p class="hero__subtitle">
@@ -185,7 +196,7 @@
                         <span>Офіційна гарантія до 36 місяців на відеокарти GeForce RTX та процесори AMD Ryzen при замовленні комплекту.</span>
                     </div>
                 </div>
-                <a href="https://hotline.ua" target="_blank" rel="noopener noreferrer" class="btn-secondary promo-banner__btn">
+                <a href="https://hotline.ua/?utm_source=pcpicker&utm_medium=partner" target="_blank" rel="noopener noreferrer" class="btn-secondary promo-banner__btn">
                     Переглянути акцію
                 </a>
             </aside>
@@ -242,7 +253,7 @@
     </div>
 </main>
 
-<!-- Модальне вікно «До магазину» (список комплектуючих збірки з посиланнями) -->
+<!-- Модальне вікно «До магазину» -->
 <div class="modal-backdrop" id="shopModal" hidden>
     <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
         <div class="modal__header">
@@ -288,7 +299,5 @@
         </div>
     </div>
 </div>
-
-<script src="/app.js"></script>
 </body>
 </html>
