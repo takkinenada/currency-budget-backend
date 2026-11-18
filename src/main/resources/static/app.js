@@ -12,6 +12,8 @@
         CASE: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="15" r="2.5"/><path d="M10 6h4"/></svg>`
     };
 
+    const PART_ORDER = ['CPU', 'GPU', 'RAM', 'SSD', 'MOTHERBOARD', 'PSU', 'CASE'];
+
     const CATEGORY_LABELS = {
         CPU: 'Процесор',
         GPU: 'Відеокарта',
@@ -22,70 +24,20 @@
         CASE: 'Корпус'
     };
 
-    // Демо-дані 3 збірок за дизайн-макетом (без підключення API)
-    const MOCK_BUILDS = [
-        {
-            id: 'value',
-            tag: 'Ціна/якість',
-            tagClass: 'tag--value',
-            title: 'Збалансований ПК',
-            totalPriceUah: 37470,
-            parts: [
-                { type: 'CPU', name: 'AMD Ryzen 5 7600', shortName: 'Ryzen 5 7600 • 6 ядер', mobileName: '7600', priceUah: 6890, url: 'https://hotline.ua', isPromo: false },
-                { type: 'GPU', name: 'Radeon RX 7700 XT 12 ГБ', shortName: 'RX 7700 XT • 12 ГБ', mobileName: 'RX 7700 XT', priceUah: 15400, url: 'https://hotline.ua', isPromo: false },
-                { type: 'RAM', name: '32 ГБ DDR5-6000', shortName: '32 ГБ DDR5', mobileName: '32 ГБ', priceUah: 3650, url: 'https://hotline.ua', isPromo: false },
-                { type: 'SSD', name: '1 ТБ NVMe Gen4', shortName: '1 ТБ NVMe Gen4', mobileName: '1 ТБ', priceUah: 2480, url: 'https://hotline.ua', isPromo: false },
-                { type: 'MOTHERBOARD', name: 'B650M', shortName: 'B650M', mobileName: 'B650M', priceUah: 4200, url: 'https://hotline.ua', isPromo: false },
-                { type: 'PSU', name: '650 Вт 80+ Gold', shortName: '650 Вт Gold', mobileName: '650 Вт', priceUah: 2750, url: 'https://hotline.ua', isPromo: false },
-                { type: 'CASE', name: 'Mid-Tower, 3 вент.', shortName: 'Mid-Tower', mobileName: 'Mid-Tower', priceUah: 2100, url: 'https://hotline.ua', isPromo: false }
-            ],
-            techFeatures: 'FSR • DDR5',
-            scores: { gaming: 7, work: 7, tech: 6 }
-        },
-        {
-            id: 'power',
-            tag: 'Потужність',
-            tagClass: 'tag--power',
-            title: 'Максимум в іграх',
-            totalPriceUah: 39850,
-            parts: [
-                { type: 'CPU', name: 'AMD Ryzen 5 7500F', shortName: 'Ryzen 5 7500F • 6 ядер', mobileName: '7500F', priceUah: 5200, url: 'https://hotline.ua', isPromo: false },
-                { type: 'GPU', name: 'GeForce RTX 5070 12 ГБ', shortName: 'RTX 5070 • 12 ГБ', mobileName: 'RTX 5070', priceUah: 22900, url: 'https://hotline.ua', isPromo: true },
-                { type: 'RAM', name: '16 ГБ DDR5-5600', shortName: '16 ГБ DDR5', mobileName: '16 ГБ', priceUah: 1900, url: 'https://hotline.ua', isPromo: false },
-                { type: 'SSD', name: '1 ТБ NVMe Gen3', shortName: '1 ТБ NVMe Gen3', mobileName: '1 ТБ', priceUah: 1950, url: 'https://hotline.ua', isPromo: false },
-                { type: 'MOTHERBOARD', name: 'A620M', shortName: 'A620M', mobileName: 'A620M', priceUah: 3100, url: 'https://hotline.ua', isPromo: false },
-                { type: 'PSU', name: '750 Вт 80+ Bronze', shortName: '750 Вт Bronze', mobileName: '750 Вт', priceUah: 2700, url: 'https://hotline.ua', isPromo: false },
-                { type: 'CASE', name: 'Mid-Tower, 3 вент.', shortName: 'Mid-Tower', mobileName: 'Mid-Tower', priceUah: 2100, url: 'https://hotline.ua', isPromo: false }
-            ],
-            techFeatures: 'DLSS • RT • DDR5',
-            scores: { gaming: 9, work: 7, tech: 7 }
-        },
-        {
-            id: 'tech',
-            tag: 'Технології',
-            tagClass: 'tag--tech',
-            title: 'Сучасна платформа',
-            totalPriceUah: 39990,
-            parts: [
-                { type: 'CPU', name: 'AMD Ryzen 5 9600X', shortName: 'Ryzen 5 9600X • 6 ядер', mobileName: '9600X', priceUah: 8900, url: 'https://hotline.ua', isPromo: true },
-                { type: 'GPU', name: 'GeForce RTX 5060 Ti 16 ГБ', shortName: 'RTX 5060 Ti • 16 ГБ', mobileName: 'RTX 5060 Ti', priceUah: 17200, url: 'https://hotline.ua', isPromo: false },
-                { type: 'RAM', name: '32 ГБ DDR5-6000', shortName: '32 ГБ DDR5', mobileName: '32 ГБ', priceUah: 3650, url: 'https://hotline.ua', isPromo: false },
-                { type: 'SSD', name: '1 ТБ NVMe Gen4', shortName: '1 ТБ NVMe Gen4', mobileName: '1 ТБ', priceUah: 2480, url: 'https://hotline.ua', isPromo: false },
-                { type: 'MOTHERBOARD', name: 'B650M Wi-Fi', shortName: 'B650M Wi-Fi', mobileName: 'B650M', priceUah: 3800, url: 'https://hotline.ua', isPromo: false },
-                { type: 'PSU', name: '650 Вт 80+ Gold', shortName: '650 Вт Gold', mobileName: '650 Вт', priceUah: 2750, url: 'https://hotline.ua', isPromo: false },
-                { type: 'CASE', name: 'Mini-Tower', shortName: 'Mini-Tower', mobileName: 'Mini-Tower', priceUah: 1210, url: 'https://hotline.ua', isPromo: false }
-            ],
-            techFeatures: 'DLSS • RT • PCIe 5.0 • DDR5',
-            scores: { gaming: 8, work: 8, tech: 9 }
-        }
-    ];
+    const PROFILE_META = {
+        VALUE: { tag: 'Ціна/якість', tagClass: 'tag--value', title: 'Збалансований ПК' },
+        PERFORMANCE: { tag: 'Потужність', tagClass: 'tag--power', title: 'Максимум в іграх' },
+        TECHNOLOGY: { tag: 'Технології', tagClass: 'tag--tech', title: 'Сучасна платформа' }
+    };
 
     const state = {
         currency: 'UAH',
         symbol: '₴',
         rates: { UAH: 1, USD: 45.34, EUR: 49.10 },
+        exactSource: { amount: 40000, currency: 'UAH' },
         cpuBrands: new Set(),
         gpuBrands: new Set(),
+        promoNames: new Set(),
         currentRenderedBuilds: []
     };
 
@@ -117,13 +69,15 @@
         return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     }
 
-    function convertFromUah(uahAmount) {
-        if (state.currency === 'UAH') return Math.round(uahAmount);
-        return Math.round(uahAmount / state.rates[state.currency]);
-    }
-
-    function formatMoneyFromUah(uahAmount) {
-        return `${formatNumber(convertFromUah(uahAmount))} ${state.symbol}`;
+    function formatPrice(amount, currency = state.currency, symbol = state.symbol) {
+        const val = Number(amount) || 0;
+        if (currency === 'UAH') {
+            return `${formatNumber(Math.round(val))} ${symbol}`;
+        }
+        const formatted = Number.isInteger(val)
+            ? formatNumber(val)
+            : val.toFixed(2).replace('.', ',');
+        return `${formatted} ${symbol}`;
     }
 
     function parseBudgetValue() {
@@ -136,6 +90,48 @@
         return state.currency === 'UAH'
             ? MIN_BUDGET_UAH
             : Math.ceil(MIN_BUDGET_UAH / state.rates[state.currency]);
+    }
+
+    // Завантаження актуального курсу валют та промо-товарів з бекенду
+    async function initBackendData() {
+        try {
+            const ratesRes = await fetch('/api/rates');
+            if (ratesRes.ok) {
+                const data = await ratesRes.json();
+                const list = Array.isArray(data) ? data : (Array.isArray(data?.rates) ? data.rates : null);
+                if (list) {
+                    list.forEach(item => {
+                        const code = (item.currency || item.code || '').toUpperCase();
+                        const rate = Number(item.rate || item.rateToUah || item.uahRate);
+                        if (code && rate > 0) state.rates[code] = rate;
+                    });
+                } else if (data && typeof data === 'object') {
+                    if (data.USD) state.rates.USD = Number(data.USD);
+                    if (data.EUR) state.rates.EUR = Number(data.EUR);
+                }
+                if (!budgetHint.classList.contains('is-error')) {
+                    setNormalState();
+                }
+            }
+        } catch (_) {
+            // Використовуємо резервні курси, якщо ендпоінт тимчасово недоступний
+        }
+
+        try {
+            const promoRes = await fetch('/api/promo/components');
+            if (promoRes.ok) {
+                const promos = await promoRes.json();
+                if (Array.isArray(promos)) {
+                    promos.forEach(item => {
+                        if (item?.sponsored && item?.name) {
+                            state.promoNames.add(item.name);
+                        }
+                    });
+                }
+            }
+        } catch (_) {
+            // Ігноруємо, якщо промо-список порожній
+        }
     }
 
     // Validation
@@ -179,6 +175,12 @@
             budgetInput.value = formatNumber(Number(raw));
         }
 
+        // Оновлюємо точне вихідне значення при ручному редагуванні
+        state.exactSource = {
+            amount: parseBudgetValue(),
+            currency: state.currency
+        };
+
         if (budgetHint.classList.contains('is-error')) {
             validateBudget();
         }
@@ -189,13 +191,18 @@
             const nextCurrency = btn.dataset.currency;
             if (nextCurrency === state.currency) return;
 
-            const current = parseBudgetValue();
-            if (!Number.isNaN(current) && current > 0) {
-                const uah = current * state.rates[state.currency];
-                const converted = nextCurrency === 'UAH'
-                    ? Math.round(uah)
-                    : Math.round(uah / state.rates[nextCurrency]);
-                budgetInput.value = formatNumber(converted);
+            const src = state.exactSource;
+            if (!Number.isNaN(src.amount) && src.amount > 0) {
+                if (src.currency === nextCurrency) {
+                    // Повертаємо точну вихідну суму без похибки подвійного округлення
+                    budgetInput.value = formatNumber(src.amount);
+                } else {
+                    const exactUah = src.amount * state.rates[src.currency];
+                    const converted = nextCurrency === 'UAH'
+                        ? Math.round(exactUah)
+                        : Math.round(exactUah / state.rates[nextCurrency]);
+                    budgetInput.value = formatNumber(converted);
+                }
             }
 
             state.currency = nextCurrency;
@@ -204,7 +211,7 @@
             currencyBtns.forEach(b => b.classList.remove('is-active'));
             btn.classList.add('is-active');
 
-            if (budgetHint.classList.contains('is-error')) {
+            if (budgetInput.value.trim() !== '') {
                 validateBudget();
             } else {
                 setNormalState();
@@ -213,9 +220,11 @@
     });
 
     quickFixBtn.addEventListener('click', () => {
-        budgetInput.value = formatNumber(getMinBudget());
+        const minVal = getMinBudget();
+        budgetInput.value = formatNumber(minVal);
+        state.exactSource = { amount: minVal, currency: state.currency };
         setNormalState();
-        runMockGeneration();
+        generateBuildsFromApi();
     });
 
     brandChips.forEach(chip => {
@@ -246,25 +255,98 @@
         budgetInput.focus();
     });
 
+    // Нормалізація даних з API під структуру карток і таблиці
+    function getMobilePartName(part) {
+        if (part.type === 'CPU') {
+            return part.name
+                .replace(/^AMD Ryzen [3579]\s+/i, '')
+                .replace(/^Intel Core Ultra [579]\s+/i, '')
+                .replace(/^Intel Core\s+/i, '');
+        }
+        if (part.type === 'GPU') {
+            return part.name
+                .replace(/^(GeForce|Radeon|Intel)\s+/i, '')
+                .replace(/\s+\d+\s*ГБ$/i, '');
+        }
+        if (part.type === 'RAM') {
+            const match = part.name.match(/\d+\s*ГБ/i);
+            return match ? match[0] : part.name;
+        }
+        return part.shortSpec || part.name;
+    }
+
+    function detectTechFeatures(sortedParts) {
+        const gpu = sortedParts.find(p => p.type === 'GPU')?.name || '';
+        const ram = sortedParts.find(p => p.type === 'RAM')?.name || '';
+        const ssd = sortedParts.find(p => p.type === 'SSD')?.name || '';
+        const features = [];
+
+        if (/RTX/i.test(gpu)) features.push('DLSS', 'RT');
+        else if (/RX/i.test(gpu)) features.push('FSR');
+        else if (/Arc/i.test(gpu)) features.push('XeSS', 'RT');
+
+        if (/Gen5/i.test(ssd)) features.push('PCIe 5.0');
+        if (/DDR5/i.test(ram)) features.push('DDR5');
+        else if (/DDR4/i.test(ram)) features.push('DDR4');
+
+        return features.length ? features.join(' • ') : 'DDR5';
+    }
+
+    function normalizeApiBuild(apiBuild) {
+        const profileKey = (apiBuild.profile || 'VALUE').toUpperCase();
+        const meta = PROFILE_META[profileKey] || {
+            tag: apiBuild.title || 'Збірка',
+            tagClass: 'tag--value',
+            title: apiBuild.description || 'Оптимальний ПК'
+        };
+
+        const sortedParts = [...(apiBuild.parts || [])]
+            .sort((a, b) => PART_ORDER.indexOf(a.type) - PART_ORDER.indexOf(b.type))
+            .map(part => ({
+                ...part,
+                shortName: part.shortSpec || part.name,
+                mobileName: getMobilePartName(part),
+                url: part.shopUrl || 'https://hotline.ua',
+                isPromo: Boolean(part.sponsored || state.promoNames.has(part.name))
+            }));
+
+        const perf100 = Number(apiBuild.performanceScore) || 75;
+        const tech100 = Number(apiBuild.techScore) || 70;
+
+        const gaming = Math.max(1, Math.min(10, Math.round(perf100 / 10)));
+        const tech = Math.max(1, Math.min(10, Math.round(tech100 / 10)));
+        const work = Math.max(1, Math.min(10, Math.round((perf100 * 0.6 + tech100 * 0.4) / 10)));
+
+        return {
+            profile: profileKey,
+            tag: meta.tag,
+            tagClass: meta.tagClass,
+            title: meta.title,
+            totalPrice: Number(apiBuild.totalPrice ?? apiBuild.totalPriceUah ?? 0),
+            parts: sortedParts,
+            techFeatures: detectTechFeatures(sortedParts),
+            scores: { gaming, work, tech }
+        };
+    }
+
     // Рендер 3 карток збірок (BuildCard)
     function renderBuildCards(builds, userBudget) {
         resultsTitle.textContent = `Твої 3 збірки за ${formatNumber(userBudget)} ${state.symbol}`;
 
         buildsGrid.innerHTML = builds.map((build, index) => {
-            const totalConverted = convertFromUah(build.totalPriceUah);
             const partsHtml = build.parts.map(part => `
                 <div class="part-row">
                     <div class="part-row__left">
                         <span class="part-row__icon">${PART_ICONS[part.type] || ''}</span>
                         <div class="part-row__info">
                             <div class="part-row__meta">
-                                <span class="part-row__cat">${CATEGORY_LABELS[part.type]}</span>
+                                <span class="part-row__cat">${CATEGORY_LABELS[part.type] || part.type}</span>
                                 ${part.isPromo ? '<span class="promo-badge">Реклама</span>' : ''}
                             </div>
                             <div class="part-row__name" title="${part.name}">${part.name}</div>
                         </div>
                     </div>
-                    <span class="part-row__price">${formatMoneyFromUah(part.priceUah)}</span>
+                    <span class="part-row__price">${formatPrice(part.price)}</span>
                 </div>
             `).join('');
 
@@ -272,7 +354,7 @@
                 <article class="build-card">
                     <div class="build-card__top">
                         <span class="tag ${build.tagClass}">${build.tag}</span>
-                        <span class="build-card__count">7 деталей</span>
+                        <span class="build-card__count">${build.parts.length} деталей</span>
                     </div>
 
                     <h3 class="build-card__title">${build.title}</h3>
@@ -284,7 +366,7 @@
                     <div class="build-card__footer">
                         <div class="build-card__total-row">
                             <span class="build-card__total-label">Разом</span>
-                            <span class="build-card__total-value">${formatNumber(totalConverted)} ${state.symbol}</span>
+                            <span class="build-card__total-value">${formatPrice(build.totalPrice)}</span>
                         </div>
                         <div class="build-card__budget-ok">✓ Вкладається в бюджет ${formatNumber(userBudget)} ${state.symbol}</div>
                         <button type="button" class="btn-primary btn-primary--full" data-open-shop="${index}">
@@ -295,7 +377,6 @@
             `;
         }).join('');
 
-        // Прив'язка кнопок «До магазину»
         buildsGrid.querySelectorAll('[data-open-shop]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const build = state.currentRenderedBuilds[Number(btn.dataset.openShop)];
@@ -304,16 +385,16 @@
         });
     }
 
-    // Рендер таблиці порівняння (Десктоп/Планшет + Мобільна адаптація)
+    // Рендер таблиці порівняння
     function renderComparisonTable(builds, userBudget) {
-        const [valB, powB, techB] = builds;
+        const getPart = (b, type) => b.parts.find(p => p.type === type) || { shortName: '—', mobileName: '—' };
 
         const maxGaming = Math.max(...builds.map(b => b.scores.gaming));
         const maxWork = Math.max(...builds.map(b => b.scores.work));
         const maxTech = Math.max(...builds.map(b => b.scores.tech));
-        const minPrice = Math.min(...builds.map(b => b.totalPriceUah));
+        const minPrice = Math.min(...builds.map(b => b.totalPrice));
 
-        const remainders = builds.map(b => Math.max(0, userBudget - convertFromUah(b.totalPriceUah)));
+        const remainders = builds.map(b => Math.max(0, userBudget - b.totalPrice));
         const maxRemainder = Math.max(...remainders);
 
         const renderScoreDesktop = (score, isBest) => `
@@ -334,172 +415,131 @@
             </div>
         `;
 
-        // Десктоп / Планшет версія (4 колонки)
+        const headerColsDesktop = builds.map(b => `<th><span class="tag ${b.tagClass}">${b.tag}</span></th>`).join('');
+        const rowCells = (getter, isBestFn = () => false) => builds.map((b, i) => {
+            const val = getter(b, i);
+            return `<td class="cmp-val ${isBestFn(b, i) ? 'is-best' : ''}">${val}</td>`;
+        }).join('');
+
         const desktopTableHtml = `
             <table class="cmp-table">
                 <thead>
                     <tr>
                         <th>Характеристика</th>
-                        <th><span class="tag tag--value">Ціна/якість</span></th>
-                        <th><span class="tag tag--power">Потужність</span></th>
-                        <th><span class="tag tag--tech">Технології</span></th>
+                        ${headerColsDesktop}
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Процесор</td>
-                        <td class="cmp-val">${valB.parts[0].shortName}</td>
-                        <td class="cmp-val">${powB.parts[0].shortName}</td>
-                        <td class="cmp-val is-best">${techB.parts[0].shortName}</td>
+                        ${rowCells(b => getPart(b, 'CPU').shortName, b => b.profile === 'TECHNOLOGY')}
                     </tr>
                     <tr>
                         <td>Відеокарта</td>
-                        <td class="cmp-val">${valB.parts[1].shortName}</td>
-                        <td class="cmp-val is-best">${powB.parts[1].shortName}</td>
-                        <td class="cmp-val">${techB.parts[1].shortName}</td>
+                        ${rowCells(b => getPart(b, 'GPU').shortName, b => b.profile === 'PERFORMANCE')}
                     </tr>
                     <tr>
                         <td>Пам'ять</td>
-                        <td class="cmp-val is-best">${valB.parts[2].shortName}</td>
-                        <td class="cmp-val">${powB.parts[2].shortName}</td>
-                        <td class="cmp-val is-best">${techB.parts[2].shortName}</td>
+                        ${rowCells(b => getPart(b, 'RAM').shortName, b => /32|64/.test(getPart(b, 'RAM').shortName))}
                     </tr>
                     <tr>
                         <td>Накопичувач</td>
-                        <td class="cmp-val is-best">${valB.parts[3].shortName}</td>
-                        <td class="cmp-val">${powB.parts[3].shortName}</td>
-                        <td class="cmp-val is-best">${techB.parts[3].shortName}</td>
+                        ${rowCells(b => getPart(b, 'SSD').shortName, b => /2 ТБ|Gen5/i.test(getPart(b, 'SSD').shortName))}
                     </tr>
                     <tr>
                         <td>Блок живлення</td>
-                        <td class="cmp-val is-best">${valB.parts[5].shortName}</td>
-                        <td class="cmp-val">${powB.parts[5].shortName}</td>
-                        <td class="cmp-val is-best">${techB.parts[5].shortName}</td>
+                        ${rowCells(b => getPart(b, 'PSU').shortName, b => /Gold|Platinum/i.test(getPart(b, 'PSU').shortName))}
                     </tr>
                     <tr>
                         <td>Технології (DLSS / FSR / DDR5)</td>
-                        <td class="cmp-val">${valB.techFeatures}</td>
-                        <td class="cmp-val">${powB.techFeatures}</td>
-                        <td class="cmp-val is-best">${techB.techFeatures}</td>
+                        ${rowCells(b => b.techFeatures, b => b.profile === 'TECHNOLOGY')}
                     </tr>
                     <tr>
                         <td>Ігри</td>
-                        <td>${renderScoreDesktop(valB.scores.gaming, valB.scores.gaming === maxGaming)}</td>
-                        <td>${renderScoreDesktop(powB.scores.gaming, powB.scores.gaming === maxGaming)}</td>
-                        <td>${renderScoreDesktop(techB.scores.gaming, techB.scores.gaming === maxGaming)}</td>
+                        ${builds.map(b => `<td>${renderScoreDesktop(b.scores.gaming, b.scores.gaming === maxGaming)}</td>`).join('')}
                     </tr>
                     <tr>
                         <td>Робота і монтаж</td>
-                        <td>${renderScoreDesktop(valB.scores.work, valB.scores.work === maxWork)}</td>
-                        <td>${renderScoreDesktop(powB.scores.work, powB.scores.work === maxWork)}</td>
-                        <td>${renderScoreDesktop(techB.scores.work, techB.scores.work === maxWork)}</td>
+                        ${builds.map(b => `<td>${renderScoreDesktop(b.scores.work, b.scores.work === maxWork)}</td>`).join('')}
                     </tr>
                     <tr>
                         <td>Нові технології</td>
-                        <td>${renderScoreDesktop(valB.scores.tech, valB.scores.tech === maxTech)}</td>
-                        <td>${renderScoreDesktop(powB.scores.tech, powB.scores.tech === maxTech)}</td>
-                        <td>${renderScoreDesktop(techB.scores.tech, techB.scores.tech === maxTech)}</td>
+                        ${builds.map(b => `<td>${renderScoreDesktop(b.scores.tech, b.scores.tech === maxTech)}</td>`).join('')}
                     </tr>
                     <tr>
                         <td>Ціна</td>
-                        <td class="cmp-val ${valB.totalPriceUah === minPrice ? 'is-best' : ''}">${formatMoneyFromUah(valB.totalPriceUah)}</td>
-                        <td class="cmp-val ${powB.totalPriceUah === minPrice ? 'is-best' : ''}">${formatMoneyFromUah(powB.totalPriceUah)}</td>
-                        <td class="cmp-val ${techB.totalPriceUah === minPrice ? 'is-best' : ''}">${formatMoneyFromUah(techB.totalPriceUah)}</td>
+                        ${rowCells(b => formatPrice(b.totalPrice), b => b.totalPrice === minPrice)}
                     </tr>
                     <tr>
                         <td>Залишок бюджету</td>
-                        <td class="cmp-val ${remainders[0] === maxRemainder ? 'is-best' : ''}">${formatNumber(remainders[0])} ${state.symbol}</td>
-                        <td class="cmp-val ${remainders[1] === maxRemainder ? 'is-best' : ''}">${formatNumber(remainders[1])} ${state.symbol}</td>
-                        <td class="cmp-val ${remainders[2] === maxRemainder ? 'is-best' : ''}">${formatNumber(remainders[2])} ${state.symbol}</td>
+                        ${rowCells((_, i) => formatPrice(remainders[i]), (_, i) => remainders[i] === maxRemainder)}
                     </tr>
                     <tr>
                         <td></td>
-                        <td><button type="button" class="btn-secondary btn-secondary--full" data-open-shop="0">До магазину</button></td>
-                        <td><button type="button" class="btn-secondary btn-secondary--full" data-open-shop="1">До магазину</button></td>
-                        <td><button type="button" class="btn-secondary btn-secondary--full" data-open-shop="2">До магазину</button></td>
+                        ${builds.map((_, i) => `<td><button type="button" class="btn-secondary btn-secondary--full" data-open-shop="${i}">До магазину</button></td>`).join('')}
                     </tr>
                 </tbody>
             </table>
         `;
 
-        // Мобільна версія таблиці (< 768 px, Специфікація п. 2)
+        const mobileDotLabels = {
+            VALUE: '<span class="cmp-mobile__dot-label"><span class="dot dot--value"></span>Ціна/як.</span>',
+            PERFORMANCE: '<span class="cmp-mobile__dot-label"><span class="dot dot--power"></span>Потужн.</span>',
+            TECHNOLOGY: '<span class="cmp-mobile__dot-label"><span class="dot dot--tech"></span>Технол.</span>'
+        };
+
         const mobileTableHtml = `
             <div class="cmp-mobile">
                 <div class="cmp-mobile__head">
-                    <span class="cmp-mobile__dot-label"><span class="dot dot--value"></span>Ціна/як.</span>
-                    <span class="cmp-mobile__dot-label"><span class="dot dot--power"></span>Потужн.</span>
-                    <span class="cmp-mobile__dot-label"><span class="dot dot--tech"></span>Технол.</span>
+                    ${builds.map(b => mobileDotLabels[b.profile] || b.tag).join('')}
                 </div>
 
                 <div class="cmp-mobile__row">
                     <div class="cmp-mobile__row-title">Процесор</div>
                     <div class="cmp-mobile__cols">
-                        <span class="cmp-val">${valB.parts[0].mobileName}</span>
-                        <span class="cmp-val">${powB.parts[0].mobileName}</span>
-                        <span class="cmp-val is-best">${techB.parts[0].mobileName}</span>
+                        ${builds.map(b => `<span class="cmp-val ${b.profile === 'TECHNOLOGY' ? 'is-best' : ''}">${getPart(b, 'CPU').mobileName}</span>`).join('')}
                     </div>
                 </div>
 
                 <div class="cmp-mobile__row">
                     <div class="cmp-mobile__row-title">Відеокарта</div>
                     <div class="cmp-mobile__cols">
-                        <span class="cmp-val">${valB.parts[1].mobileName}</span>
-                        <span class="cmp-val is-best">${powB.parts[1].mobileName}</span>
-                        <span class="cmp-val">${techB.parts[1].mobileName}</span>
+                        ${builds.map(b => `<span class="cmp-val ${b.profile === 'PERFORMANCE' ? 'is-best' : ''}">${getPart(b, 'GPU').mobileName}</span>`).join('')}
                     </div>
                 </div>
 
                 <div class="cmp-mobile__row">
                     <div class="cmp-mobile__row-title">Пам'ять</div>
                     <div class="cmp-mobile__cols">
-                        <span class="cmp-val is-best">${valB.parts[2].mobileName}</span>
-                        <span class="cmp-val">${powB.parts[2].mobileName}</span>
-                        <span class="cmp-val is-best">${techB.parts[2].mobileName}</span>
-                    </div>
-                </div>
-
-                <div class="cmp-mobile__row">
-                    <div class="cmp-mobile__row-title">Технології</div>
-                    <div class="cmp-mobile__cols">
-                        <span class="cmp-val">FSR/DDR5</span>
-                        <span class="cmp-val">DLSS/RT</span>
-                        <span class="cmp-val is-best">DLSS/PCIe5</span>
+                        ${builds.map(b => `<span class="cmp-val ${/32|64/.test(getPart(b, 'RAM').mobileName) ? 'is-best' : ''}">${getPart(b, 'RAM').mobileName}</span>`).join('')}
                     </div>
                 </div>
 
                 <div class="cmp-mobile__row">
                     <div class="cmp-mobile__row-title">Ігри</div>
                     <div class="cmp-mobile__cols">
-                        ${renderScoreMobile(valB.scores.gaming, valB.scores.gaming === maxGaming)}
-                        ${renderScoreMobile(powB.scores.gaming, powB.scores.gaming === maxGaming)}
-                        ${renderScoreMobile(techB.scores.gaming, techB.scores.gaming === maxGaming)}
+                        ${builds.map(b => renderScoreMobile(b.scores.gaming, b.scores.gaming === maxGaming)).join('')}
                     </div>
                 </div>
 
                 <div class="cmp-mobile__row">
                     <div class="cmp-mobile__row-title">Робота і монтаж</div>
                     <div class="cmp-mobile__cols">
-                        ${renderScoreMobile(valB.scores.work, valB.scores.work === maxWork)}
-                        ${renderScoreMobile(powB.scores.work, powB.scores.work === maxWork)}
-                        ${renderScoreMobile(techB.scores.work, techB.scores.work === maxWork)}
+                        ${builds.map(b => renderScoreMobile(b.scores.work, b.scores.work === maxWork)).join('')}
                     </div>
                 </div>
 
                 <div class="cmp-mobile__row">
                     <div class="cmp-mobile__row-title">Нові технології</div>
                     <div class="cmp-mobile__cols">
-                        ${renderScoreMobile(valB.scores.tech, valB.scores.tech === maxTech)}
-                        ${renderScoreMobile(powB.scores.tech, powB.scores.tech === maxTech)}
-                        ${renderScoreMobile(techB.scores.tech, techB.scores.tech === maxTech)}
+                        ${builds.map(b => renderScoreMobile(b.scores.tech, b.scores.tech === maxTech)).join('')}
                     </div>
                 </div>
 
                 <div class="cmp-mobile__row">
                     <div class="cmp-mobile__row-title">Ціна</div>
                     <div class="cmp-mobile__cols">
-                        <span class="cmp-val ${valB.totalPriceUah === minPrice ? 'is-best' : ''}">${formatMoneyFromUah(valB.totalPriceUah)}</span>
-                        <span class="cmp-val ${powB.totalPriceUah === minPrice ? 'is-best' : ''}">${formatMoneyFromUah(powB.totalPriceUah)}</span>
-                        <span class="cmp-val ${techB.totalPriceUah === minPrice ? 'is-best' : ''}">${formatMoneyFromUah(techB.totalPriceUah)}</span>
+                        ${builds.map(b => `<span class="cmp-val ${b.totalPrice === minPrice ? 'is-best' : ''}">${formatPrice(b.totalPrice)}</span>`).join('')}
                     </div>
                 </div>
             </div>
@@ -526,16 +566,16 @@
         tagEl.className = `tag ${build.tagClass}`;
         tagEl.textContent = build.tag;
         titleEl.textContent = `${build.title} — купити комплектуючі`;
-        totalEl.textContent = formatMoneyFromUah(build.totalPriceUah);
+        totalEl.textContent = formatPrice(build.totalPrice);
 
         listEl.innerHTML = build.parts.map(part => `
             <div class="shop-item">
                 <div>
-                    <div class="shop-item__cat">${CATEGORY_LABELS[part.type]} ${part.isPromo ? '<span class="promo-badge">Реклама</span>' : ''}</div>
+                    <div class="shop-item__cat">${CATEGORY_LABELS[part.type] || part.type} ${part.isPromo ? '<span class="promo-badge">Реклама</span>' : ''}</div>
                     <div class="shop-item__name">${part.name}</div>
                 </div>
                 <div class="shop-item__right">
-                    <span class="shop-item__price">${formatMoneyFromUah(part.priceUah)}</span>
+                    <span class="shop-item__price">${formatPrice(part.price)}</span>
                     <a href="${part.url}" target="_blank" rel="noopener noreferrer" class="shop-item__link">Купити →</a>
                 </div>
             </div>
@@ -544,17 +584,11 @@
         modal.hidden = false;
     }
 
-    // Симуляція генерації збірок на демо-даних (до етапу підключення API)
-    function runMockGeneration() {
+    // Запит на бекенд POST /api/builds/generate з фільтрацією брендів CPU та GPU
+    async function generateBuildsFromApi() {
         const userBudget = parseBudgetValue();
-        const userBudgetUah = userBudget * state.rates[state.currency];
+        const combinedBrands = Array.from(new Set([...state.cpuBrands, ...state.gpuBrands]));
 
-        // Перевірка сценарію «Нічого не знайдено» (наприклад, якщо обрано лише Intel для CPU і GPU при малому бюджеті)
-        const isImpossibleCombo = state.cpuBrands.size === 1 && state.cpuBrands.has('INTEL')
-            && state.gpuBrands.size === 1 && state.gpuBrands.has('INTEL')
-            && userBudgetUah < 25000;
-
-        // Стан 3: Завантаження (скелетони + кнопка «Підбираємо...»)
         heroSection.hidden = true;
         benefitsSection.hidden = true;
         resultsSection.hidden = true;
@@ -564,43 +598,67 @@
         submitBtn.disabled = true;
         submitBtn.textContent = 'Підбираємо...';
 
-        setTimeout(() => {
-            skeletonSection.hidden = true;
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Підібрати знову';
-            formCard.classList.add('is-compact');
+        try {
+            const response = await fetch('/api/builds/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    budget: userBudget,
+                    currency: state.currency,
+                    brands: combinedBrands
+                })
+            });
 
-            if (isImpossibleCombo) {
+            if (response.status === 422) {
                 emptySection.hidden = false;
                 return;
             }
 
-            // Адаптуємо демо-ціни під введений бюджет для реалістичного прев'ю вёрстки
-            const scale = userBudgetUah < 39990 ? (userBudgetUah / 40500) : 1;
-            const preparedBuilds = MOCK_BUILDS.map(build => {
-                const scaledParts = build.parts.map(p => ({
-                    ...p,
-                    priceUah: Math.round((p.priceUah * scale) / 10) * 10
-                }));
-                const sumUah = scaledParts.reduce((acc, p) => acc + p.priceUah, 0);
-                return {
-                    ...build,
-                    parts: scaledParts,
-                    totalPriceUah: sumUah
-                };
+            if (response.status === 400) {
+                const err = await response.json().catch(() => ({}));
+                setErrorState(err.detail || `Замало для повної збірки — мінімум ${formatNumber(getMinBudget())} ${state.symbol}`);
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const rawBuilds = Array.isArray(data.builds) ? data.builds : [];
+
+            const normalizedBuilds = rawBuilds.map(normalizeApiBuild).filter(build => {
+                const cpu = build.parts.find(p => p.type === 'CPU');
+                const gpu = build.parts.find(p => p.type === 'GPU');
+                const cpuOk = state.cpuBrands.size === 0 || (cpu && state.cpuBrands.has((cpu.brand || '').toUpperCase()));
+                const gpuOk = state.gpuBrands.size === 0 || (gpu && state.gpuBrands.has((gpu.brand || '').toUpperCase()));
+                return cpuOk && gpuOk;
             });
 
-            state.currentRenderedBuilds = preparedBuilds;
-            renderBuildCards(preparedBuilds, userBudget);
-            renderComparisonTable(preparedBuilds, userBudget);
+            if (normalizedBuilds.length === 0) {
+                emptySection.hidden = false;
+                return;
+            }
+
+            state.currentRenderedBuilds = normalizedBuilds;
+            renderBuildCards(normalizedBuilds, userBudget);
+            renderComparisonTable(normalizedBuilds, userBudget);
             resultsSection.hidden = false;
-        }, 450);
+        } catch (error) {
+            console.error('Помилка підбору збірок:', error);
+            emptySection.hidden = false;
+        } finally {
+            skeletonSection.hidden = true;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Підібрати знову';
+            formCard.classList.add('is-compact');
+        }
     }
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         if (!validateBudget()) return;
-        runMockGeneration();
+        generateBuildsFromApi();
     });
 
     // Бургер-меню та модальні вікна
@@ -634,4 +692,5 @@
     });
 
     setNormalState();
+    initBackendData();
 })();
