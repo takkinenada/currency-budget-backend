@@ -3,149 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCPicker — Розумний підбір збірок ПК під ваш бюджет</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>PCPicker — Підбери ПК під свій бюджет</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <header class="header">
     <div class="container header__inner">
         <a href="/" class="logo">
-                <span class="logo__icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-                        <rect x="9" y="9" width="6" height="6"></rect>
-                        <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
-                    </svg>
-                </span>
-            <span class="logo__text">PC<strong>Picker</strong></span>
+            <span class="logo__badge" aria-hidden="true"></span>
+            <span class="logo__text">PCPicker</span>
         </a>
 
-        <div class="rates-badge" id="ratesBadge" title="Актуальний курс НБУ з бекенду">
-            <span class="rates-badge__dot"></span>
-            <span id="ratesText">Завантаження курсу НБУ...</span>
+        <nav class="nav-desktop" aria-label="Головна навігація">
+            <button type="button" class="nav-link" data-modal="howItWorksModal">Як це працює</button>
+            <button type="button" class="nav-link" data-modal="aboutModal">Про проєкт</button>
+        </nav>
+
+        <button type="button" class="burger-btn" id="burgerBtn" aria-label="Відкрити меню" aria-expanded="false">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <div class="nav-mobile" id="mobileMenu" hidden>
+        <div class="container nav-mobile__inner">
+            <button type="button" class="nav-link" data-modal="howItWorksModal">Як це працює</button>
+            <button type="button" class="nav-link" data-modal="aboutModal">Про проєкт</button>
         </div>
     </div>
 </header>
 
 <main class="main">
     <div class="container">
-        <section class="hero">
-            <h1 class="hero__title">Підбір сумісного ПК за вашим бюджетом</h1>
+        <!-- Hero (приховується після генерації збірок, як у макеті Результат) -->
+        <section class="hero" id="heroSection">
+            <h1 class="hero__title">Підбери ПК під свій бюджет</h1>
             <p class="hero__subtitle">
-                Вкажіть суму та бажані бренди — алгоритм сформує 3 перевірені конфігурації:
-                <strong>«Ціна/якість»</strong>, <strong>«Потужність»</strong> та <strong>«Технології»</strong>.
+                Введи суму — покажемо 3 сумісні збірки з актуальними цінами з українських магазинів.
             </p>
         </section>
 
-        <section class="configurator card" aria-label="Параметри підбору ПК">
-            <form id="buildForm" novalidate>
-                <!-- Блок бюджету та валюти -->
-                <div class="form-row">
-                    <div class="form-group form-group--budget">
-                        <div class="form-label-row">
-                            <label for="budgetInput" class="form-label">Ваш бюджет</label>
-                            <span class="form-hint" id="minBudgetHint">Мінімум: 15 000 ₴</span>
-                        </div>
+        <!-- Форма підбору -->
+        <section class="form-card" id="formCard" aria-label="Форма підбору ПК">
+            <form id="buildForm" class="build-form" novalidate>
+                <div class="budget-section">
+                    <label for="budgetInput" class="label-caption">ТВІЙ БЮДЖЕТ</label>
 
-                        <div class="budget-control" id="budgetControl">
-                            <span class="budget-control__symbol" id="currencySymbol">₴</span>
+                    <div class="budget-row">
+                        <div class="budget-input-wrap" id="budgetField">
                             <input
-                                    type="number"
+                                    type="text"
+                                    inputmode="numeric"
                                     id="budgetInput"
-                                    class="budget-control__input"
-                                    placeholder="Наприклад, 50000"
-                                    min="1"
-                                    step="100"
-                                    value="50000"
-                                    required
+                                    class="budget-input"
+                                    placeholder="35 000"
+                                    value="40 000"
+                                    autocomplete="off"
                             >
-                            <div class="currency-switcher" role="group" aria-label="Вибір валюти">
-                                <button type="button" class="currency-btn is-active" data-currency="UAH" data-symbol="₴">₴ UAH</button>
-                                <button type="button" class="currency-btn" data-currency="USD" data-symbol="$">$ USD</button>
-                                <button type="button" class="currency-btn" data-currency="EUR" data-symbol="€">€ EUR</button>
-                            </div>
                         </div>
 
-                        <!-- Швидкі пресети бюджету -->
-                        <div class="presets" id="budgetPresets">
-                            <button type="button" class="preset-chip" data-uah="25000">25 000 ₴</button>
-                            <button type="button" class="preset-chip" data-uah="50000">50 000 ₴</button>
-                            <button type="button" class="preset-chip" data-uah="80000">80 000 ₴</button>
-                            <button type="button" class="preset-chip" data-uah="120000">120 000 ₴</button>
+                        <div class="currency-switch" role="group" aria-label="Вибір валюти">
+                            <button type="button" class="currency-btn is-active" data-currency="UAH" data-symbol="₴">₴</button>
+                            <button type="button" class="currency-btn" data-currency="USD" data-symbol="$">$</button>
+                            <button type="button" class="currency-btn" data-currency="EUR" data-symbol="€">€</button>
                         </div>
+                    </div>
 
-                        <!-- Повідомлення валідації -->
-                        <div class="validation-error" id="validationError" hidden>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="8" x2="12" y2="12"></line>
-                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                            </svg>
-                            <span id="validationText"></span>
-                            <button type="button" class="quick-fix-btn" id="quickFixBtn">Підібрати за 15 000 ₴</button>
-                        </div>
+                    <p class="budget-hint" id="budgetHint">Мінімум 15 000 ₴ для робочої збірки</p>
+
+                    <div class="error-action" id="errorAction" hidden>
+                        <button type="button" class="btn-secondary" id="quickFixBtn">Показати збірку за 15 000 ₴</button>
                     </div>
                 </div>
 
-                <!-- Блок вибору брендів -->
-                <div class="form-group">
-                    <div class="form-label-row">
-                        <span class="form-label">Бажані бренди <span class="text-muted">(необов'язково)</span></span>
-                        <button type="button" class="reset-brands-btn" id="resetBrandsBtn" hidden>Скинути вибір</button>
-                    </div>
-
-                    <div class="brands-grid">
-                        <div class="brand-category">
-                            <span class="brand-category__title">Процесор та відеокарта (чип)</span>
-                            <div class="brand-chips">
-                                <button type="button" class="brand-chip" data-brand="AMD" aria-pressed="false">
-                                    <span class="brand-chip__check">✓</span> AMD
-                                </button>
-                                <button type="button" class="brand-chip" data-brand="INTEL" aria-pressed="false">
-                                    <span class="brand-chip__check">✓</span> Intel
-                                </button>
-                                <button type="button" class="brand-chip" data-brand="NVIDIA" aria-pressed="false">
-                                    <span class="brand-chip__check">✓</span> NVIDIA
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="brand-category">
-                            <span class="brand-category__title">Виробник плати та відеокарти</span>
-                            <div class="brand-chips">
-                                <button type="button" class="brand-chip" data-brand="MSI" aria-pressed="false">
-                                    <span class="brand-chip__check">✓</span> MSI
-                                </button>
-                                <button type="button" class="brand-chip" data-brand="GIGABYTE" aria-pressed="false">
-                                    <span class="brand-chip__check">✓</span> Gigabyte
-                                </button>
-                            </div>
+                <div class="brands-section">
+                    <div class="brand-row">
+                        <span class="brand-row__label">ПРОЦЕСОР</span>
+                        <div class="brand-row__chips" role="group" aria-label="Бренд процесора">
+                            <button type="button" class="brand-chip" data-group="cpu" data-brand="INTEL" aria-pressed="false">Intel</button>
+                            <button type="button" class="brand-chip" data-group="cpu" data-brand="AMD" aria-pressed="false">AMD</button>
                         </div>
                     </div>
+
+                    <div class="brand-row">
+                        <span class="brand-row__label">ВІДЕОКАРТА</span>
+                        <div class="brand-row__chips" role="group" aria-label="Бренд відеокарти">
+                            <button type="button" class="brand-chip" data-group="gpu" data-brand="NVIDIA" aria-pressed="false">NVIDIA</button>
+                            <button type="button" class="brand-chip" data-group="gpu" data-brand="AMD" aria-pressed="false">AMD</button>
+                            <button type="button" class="brand-chip" data-group="gpu" data-brand="INTEL" aria-pressed="false">Intel</button>
+                        </div>
+                    </div>
+
+                    <p class="brands-note" id="brandsNote">Нічого не вибрано = будь-який бренд</p>
                 </div>
 
-                <!-- Кнопка запуску -->
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary" id="submitBtn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                        </svg>
-                        <span>Підібрати 3 збірки ПК</span>
-                    </button>
-                    <span class="selected-summary" id="selectedSummary">Усі бренди дозволені</span>
+                <div class="form-submit-row">
+                    <button type="submit" class="btn-primary" id="submitBtn">Підібрати збірки</button>
                 </div>
             </form>
         </section>
 
-        <!-- Контейнер результатів (заготовка під наступну таску з картками збірок) -->
-        <section class="results-placeholder" id="resultsArea" hidden>
-            <div class="status-banner" id="statusBanner"></div>
+        <!-- Стан 3: Скелетони завантаження -->
+        <section class="results-section" id="skeletonSection" hidden aria-label="Завантаження збірок">
+            <div class="builds-grid">
+                <div class="skeleton-card">
+                    <div class="skeleton-line skeleton-line--tag"></div>
+                    <div class="skeleton-line skeleton-line--title"></div>
+                    <div class="skeleton-rows">
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                    </div>
+                    <div class="skeleton-footer">
+                        <div class="skeleton-line skeleton-line--total"></div>
+                        <div class="skeleton-btn"></div>
+                    </div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton-line skeleton-line--tag"></div>
+                    <div class="skeleton-line skeleton-line--title"></div>
+                    <div class="skeleton-rows">
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                    </div>
+                    <div class="skeleton-footer">
+                        <div class="skeleton-line skeleton-line--total"></div>
+                        <div class="skeleton-btn"></div>
+                    </div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton-line skeleton-line--tag"></div>
+                    <div class="skeleton-line skeleton-line--title"></div>
+                    <div class="skeleton-rows">
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                        <div class="skeleton-row"></div>
+                    </div>
+                    <div class="skeleton-footer">
+                        <div class="skeleton-line skeleton-line--total"></div>
+                        <div class="skeleton-btn"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Стан 4: Результат — 3 збірки + Промо-банер + Таблиця порівняння -->
+        <section class="results-section" id="resultsSection" hidden>
+            <div class="results-header">
+                <div>
+                    <h2 class="results-header__title" id="resultsTitle">Твої 3 збірки за 40 000 ₴</h2>
+                    <p class="results-header__subtitle">Усі деталі сумісні між собою. Ціни — з магазинів на сьогодні.</p>
+                </div>
+                <a href="#comparisonSection" class="compare-anchor">Порівняти характеристики →</a>
+            </div>
+
+            <!-- Сітка 3 карток BuildCard -->
+            <div class="builds-grid" id="buildsGrid"></div>
+
+            <!-- Промо-банер з плашкою «Реклама» -->
+            <aside class="promo-banner" aria-label="Партнерська пропозиція">
+                <div class="promo-banner__content">
+                    <span class="promo-badge">Реклама</span>
+                    <div class="promo-banner__text">
+                        <strong>Безкоштовна збірка та тестування ПК від партнерів</strong>
+                        <span>Офіційна гарантія до 36 місяців на відеокарти GeForce RTX та процесори AMD Ryzen при замовленні комплекту.</span>
+                    </div>
+                </div>
+                <a href="https://hotline.ua" target="_blank" rel="noopener noreferrer" class="btn-secondary promo-banner__btn">
+                    Переглянути акцію
+                </a>
+            </aside>
+
+            <!-- Таблиця порівняння збірок -->
+            <section class="comparison-section" id="comparisonSection" aria-labelledby="comparisonTitle">
+                <div class="comparison-header">
+                    <h2 class="comparison-header__title" id="comparisonTitle">Порівняння збірок</h2>
+                    <p class="comparison-header__subtitle">
+                        Оцінки від 1 до 10 — наша порівняльна шкала. Лаймовим виділено найкраще значення в рядку.
+                    </p>
+                </div>
+
+                <div class="comparison-card" id="comparisonContainer"></div>
+            </section>
+        </section>
+
+        <!-- Стан 5: Нічого не знайдено -->
+        <section class="results-section" id="emptySection" hidden>
+            <div class="empty-card">
+                <div class="empty-card__icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <h2 class="empty-card__title">Не вдалося зібрати ПК з цими брендами</h2>
+                <p class="empty-card__text">Спробуй вибрати більше брендів або збільшити бюджет.</p>
+                <button type="button" class="btn-secondary" id="resetFiltersBtn">Змінити бренди</button>
+            </div>
+        </section>
+
+        <!-- Стартова секція головної: «Що ти отримаєш» -->
+        <section class="benefits" id="benefitsSection">
+            <h2 class="benefits__title">Що ти отримаєш</h2>
+
+            <div class="benefits__grid">
+                <article class="benefit-card">
+                    <span class="tag tag--value">Ціна/якість</span>
+                    <p class="benefit-card__text">Найкраще співвідношення ціни та продуктивності.</p>
+                </article>
+
+                <article class="benefit-card">
+                    <span class="tag tag--power">Потужність</span>
+                    <p class="benefit-card__text">Максимум ігрової потужності за ці гроші.</p>
+                </article>
+
+                <article class="benefit-card">
+                    <span class="tag tag--tech">Технології</span>
+                    <p class="benefit-card__text">Новітня платформа із запасом на майбутнє.</p>
+                </article>
+            </div>
         </section>
     </div>
 </main>
+
+<!-- Модальне вікно «До магазину» (список комплектуючих збірки з посиланнями) -->
+<div class="modal-backdrop" id="shopModal" hidden>
+    <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
+        <div class="modal__header">
+            <div>
+                <span class="tag" id="shopModalTag">Ціна/якість</span>
+                <h3 class="modal__title" id="shopModalTitle" style="margin-top: 8px;">Комплектуючі в магазинах</h3>
+            </div>
+            <button type="button" class="modal__close" data-close-modal aria-label="Закрити">✕</button>
+        </div>
+        <div class="shop-list" id="shopModalList"></div>
+        <div class="shop-modal-footer">
+            <span class="shop-modal-footer__label">Загальна вартість</span>
+            <span class="shop-modal-footer__total" id="shopModalTotal">37 470 ₴</span>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно «Як це працює» -->
+<div class="modal-backdrop" id="howItWorksModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+        <div class="modal__header">
+            <h3 class="modal__title" id="howTitle">Як працює PCPicker</h3>
+            <button type="button" class="modal__close" data-close-modal aria-label="Закрити">✕</button>
+        </div>
+        <div class="modal__body">
+            <p>1. Вкажіть свій бюджет у гривнях, доларах або євро — сума автоматично перераховується за актуальним курсом.</p>
+            <p>2. За бажанням оберіть виробників процесора та відеокарти.</p>
+            <p>3. Алгоритм перевіряє сумісність сокетів, оперативної пам'яті (DDR4/DDR5), потужність блока живлення та формує 3 готові конфігурації.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно «Про проєкт» -->
+<div class="modal-backdrop" id="aboutModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+        <div class="modal__header">
+            <h3 class="modal__title" id="aboutTitle">Про проєкт</h3>
+            <button type="button" class="modal__close" data-close-modal aria-label="Закрити">✕</button>
+        </div>
+        <div class="modal__body">
+            <p><strong>PCPicker</strong> — сервіс швидкого підбору сумісних комплектуючих для ПК під реальний бюджет користувача без ручного звіряння характеристик.</p>
+            <p>Кожна конфігурація складається з 7 обов'язкових компонентів: процесор, відеокарта, оперативна пам'ять, накопичувач, материнська плата, блок живлення та корпус.</p>
+        </div>
+    </div>
+</div>
 
 <script src="/app.js"></script>
 </body>
