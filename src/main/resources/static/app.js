@@ -92,6 +92,24 @@
             : Math.ceil(MIN_BUDGET_UAH / state.rates[state.currency]);
     }
 
+    // Формування партнерського посилання для переходу в магазин
+    function buildPartnerUrl(part) {
+        const rawUrl = part.shopUrl || part.partnerUrl || part.url || 'https://hotline.ua';
+        try {
+            const urlObj = new URL(rawUrl);
+            if (!urlObj.searchParams.has('utm_source')) {
+                urlObj.searchParams.set('utm_source', 'pcpicker');
+                urlObj.searchParams.set('utm_medium', 'partner');
+            }
+            if (part.name && !urlObj.searchParams.has('q') && urlObj.pathname === '/') {
+                urlObj.searchParams.set('q', part.name);
+            }
+            return urlObj.toString();
+        } catch (_) {
+            return rawUrl;
+        }
+    }
+
     // Завантаження актуального курсу валют та промо-товарів з бекенду
     async function initBackendData() {
         try {
@@ -175,7 +193,6 @@
             budgetInput.value = formatNumber(Number(raw));
         }
 
-        // Оновлюємо точне вихідне значення при ручному редагуванні
         state.exactSource = {
             amount: parseBudgetValue(),
             currency: state.currency
@@ -194,7 +211,6 @@
             const src = state.exactSource;
             if (!Number.isNaN(src.amount) && src.amount > 0) {
                 if (src.currency === nextCurrency) {
-                    // Повертаємо точну вихідну суму без похибки подвійного округлення
                     budgetInput.value = formatNumber(src.amount);
                 } else {
                     const exactUah = src.amount * state.rates[src.currency];
@@ -306,7 +322,7 @@
                 ...part,
                 shortName: part.shortSpec || part.name,
                 mobileName: getMobilePartName(part),
-                url: part.shopUrl || 'https://hotline.ua',
+                url: buildPartnerUrl(part),
                 isPromo: Boolean(part.sponsored || state.promoNames.has(part.name))
             }));
 
@@ -555,7 +571,7 @@
         });
     }
 
-    // Модальне вікно «До магазину»
+    // Модальне вікно «До магазину» з партнерськими посиланнями
     function openShopModal(build) {
         const modal = document.getElementById('shopModal');
         const tagEl = document.getElementById('shopModalTag');
@@ -584,7 +600,7 @@
         modal.hidden = false;
     }
 
-    // Запит на бекенд POST /api/builds/generate з фільтрацією брендів CPU та GPU
+    // Запит на бекенд POST /api/builds/generate з анімацією скелетонів
     async function generateBuildsFromApi() {
         const userBudget = parseBudgetValue();
         const combinedBrands = Array.from(new Set([...state.cpuBrands, ...state.gpuBrands]));
@@ -598,16 +614,21 @@
         submitBtn.disabled = true;
         submitBtn.textContent = 'Підбираємо...';
 
+        const minSkeletonDelay = new Promise(resolve => setTimeout(resolve, 250));
+
         try {
-            const response = await fetch('/api/builds/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    budget: userBudget,
-                    currency: state.currency,
-                    brands: combinedBrands
-                })
-            });
+            const [response] = await Promise.all([
+                fetch('/api/builds/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        budget: userBudget,
+                        currency: state.currency,
+                        brands: combinedBrands
+                    })
+                }),
+                minSkeletonDelay
+            ]);
 
             if (response.status === 422) {
                 emptySection.hidden = false;
