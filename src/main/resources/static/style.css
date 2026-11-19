@@ -20,9 +20,10 @@
     --build-tech: #5CC8FF;
 
     --success: #4ADE80;
+    --success-bg: rgba(74, 222, 128, 0.14);
     --danger: #FF6B6B;
     --promo: #F5C542;
-    --promo-bg: rgba(245, 197, 66, 0.1);
+    --promo-bg: rgba(245, 197, 66, 0.12);
 
     --space-1: 4px;
     --space-2: 8px;
@@ -63,6 +64,7 @@
     --build-tech: #0369A1;
 
     --success: #15803D;
+    --success-bg: rgba(21, 128, 61, 0.12);
     --danger: #B91C1C;
     --promo: #A16207;
     --promo-bg: rgba(161, 98, 7, 0.1);
@@ -126,7 +128,6 @@ input {
     padding: 0 64px;
 }
 
-/* === Focus Ring === */
 :focus-visible {
     outline: 2px solid var(--accent-text);
     outline-offset: 2px;
@@ -1130,7 +1131,7 @@ input {
 }
 
 .modal--wide {
-    max-width: 560px;
+    max-width: 640px;
 }
 
 .modal__header {
@@ -1142,18 +1143,36 @@ input {
 }
 
 .modal__title {
-    font-size: 18px;
-    line-height: 26px;
+    font-size: 20px;
+    line-height: 28px;
     font-weight: 700;
+    color: var(--ink);
+}
+
+.modal__subtitle {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--ink-muted);
 }
 
 .modal__close {
-    background: none;
-    border: none;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
     color: var(--ink-muted);
-    font-size: 18px;
+    font-size: 14px;
     cursor: pointer;
-    padding: 4px;
+    flex-shrink: 0;
+}
+
+.modal__close:hover {
+    color: var(--ink);
 }
 
 .modal__body {
@@ -1169,12 +1188,14 @@ input {
     color: var(--ink);
 }
 
+/* Shop Modal — Rozetka / Comfy badges, availability & affiliate redirect buttons */
 .shop-list {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    max-height: 360px;
+    max-height: 400px;
     overflow-y: auto;
+    padding-right: 2px;
     scrollbar-width: thin;
     scrollbar-color: var(--line-strong) var(--surface);
 }
@@ -1184,20 +1205,85 @@ input {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    padding: 10px var(--space-3);
+    padding: 12px var(--space-4);
     background-color: var(--surface-raised);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
 }
 
-.shop-item__name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
+.shop-item__left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.shop-item__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .shop-item__cat {
     font-size: 12px;
+    line-height: 16px;
     color: var(--ink-muted);
+}
+
+.shop-item__name {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.shop-item__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.store-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background-color: var(--surface);
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.stock-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.stock-pill--in {
+    background-color: var(--success-bg);
+    color: var(--success);
+}
+
+.stock-pill--out {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink-muted);
+}
+
+.stock-pill__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
 }
 
 .shop-item__right {
@@ -1209,20 +1295,39 @@ input {
 
 .shop-item__price {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
-}
-
-.shop-item__link {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent-text);
-    text-decoration: none;
+    color: var(--ink);
     white-space: nowrap;
 }
 
-.shop-item__link:hover {
-    text-decoration: underline;
+.shop-buy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 14px;
+    border: none;
+    border-radius: var(--radius-md);
+    background-color: var(--accent);
+    color: var(--on-accent);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.shop-buy-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.shop-buy-btn--disabled {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink-muted);
+    cursor: not-allowed;
 }
 
 .shop-modal-footer {
@@ -1230,8 +1335,15 @@ input {
     padding-top: var(--space-4);
     border-top: 1px solid var(--line);
     display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.shop-modal-footer__top {
+    display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-3);
 }
 
 .shop-modal-footer__label {
@@ -1239,10 +1351,24 @@ input {
     color: var(--ink-muted);
 }
 
+.shop-modal-footer__stores {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 2px;
+}
+
 .shop-modal-footer__total {
     font-family: var(--font-mono);
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
+    color: var(--ink);
+}
+
+.shop-modal-footer__note {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--ink-muted);
 }
 
 /* === Responsive: Планшет (768–1279 px) === */
@@ -1410,6 +1536,18 @@ input {
         width: 100%;
         max-width: 56px;
     }
+
+    /* Мобільна адаптація модалки магазинів */
+    .shop-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .shop-item__right {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: var(--space-2);
+    }
 }
 
 /* === Полірування під найвужчі екрани (360–380 px) === */
@@ -1457,15 +1595,5 @@ input {
 
     .cmp-mobile__cols {
         font-size: 11px;
-    }
-
-    .shop-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .shop-item__right {
-        width: 100%;
-        justify-content: space-between;
     }
 }
