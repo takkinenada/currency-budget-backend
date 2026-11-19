@@ -1,3 +1,13 @@
+/* === 0. Конфігурація API (відносні шляхи за замовчуванням або production URL) === */
+const API_BASE_URL = ((window.PCPICKER_CONFIG && window.PCPICKER_CONFIG.apiBaseUrl) || '').replace(/\/+$/, '');
+
+function apiUrl(path) {
+    if (!path) return API_BASE_URL || '/';
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `${API_BASE_URL}${normalizedPath}`;
+}
+
 /* === 1. Управління світлою та темною темою (localStorage + prefers-color-scheme) === */
 (function initThemeSwitcher() {
     const STORAGE_KEY = 'pcpicker-theme';
@@ -132,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchRates() {
         try {
-            const response = await fetch('/api/rates');
+            const response = await fetch(apiUrl('/api/rates'));
             if (!response.ok) return;
             const data = await response.json();
 
@@ -158,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchPromoLabels() {
         try {
-            const response = await fetch('/api/promo/components');
+            const response = await fetch(apiUrl('/api/promo/components'));
             if (!response.ok) return;
             const list = await response.json();
             if (!Array.isArray(list)) return;
@@ -517,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch('/api/builds/generate', {
+            const response = await fetch(apiUrl('/api/builds/generate'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -701,9 +711,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const storeName = normalizeStoreDisplayName(p.storeName ?? p.store_name);
             const inStock = p.inStock !== undefined ? Boolean(p.inStock) : (p.in_stock !== undefined ? Boolean(p.in_stock) : true);
 
-            // Серверний редирект GET /api/affiliate/go/{componentId} для підрахунку кліків
-            const affiliateUrl = p.affiliateUrl
+            const rawAffiliateUrl = p.affiliateUrl
                 || (componentId !== null ? `/api/affiliate/go/${encodeURIComponent(componentId)}` : (p.shopUrl || '#'));
+            const affiliateUrl = rawAffiliateUrl === '#' ? '#' : apiUrl(rawAffiliateUrl);
 
             const apiPromoLabel = p.promoLabel ?? p.promo_label ?? (componentId !== null ? state.promoByComponentId[String(componentId)] : null);
             const isSponsored = Boolean(p.sponsored || apiPromoLabel);
@@ -805,7 +815,6 @@ document.addEventListener('DOMContentLoaded', () => {
             shopModalTitle.textContent = `${title} — купити комплектуючі`;
         }
 
-        // Підрахунок пропозицій по кожному магазину (Rozetka ×N, Comfy ×M)
         const storeCounts = {};
         parts.forEach((part) => {
             storeCounts[part.storeName] = (storeCounts[part.storeName] || 0) + 1;
