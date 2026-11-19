@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+    <rect width="1200" height="630" fill="#0E1116" />
+    <rect x="48" y="48" width="1104" height="534" rx="28" fill="#171B22" stroke="#2C323C" stroke-width="2" />
+    <rect x="96" y="104" width="44" height="44" rx="10" fill="#B6F24A" />
+    <text x="158" y="136" fill="#EEF1F5" font-family="system-ui, -apple-system, sans-serif" font-size="30" font-weight="700">PCPicker</text>
+    <text x="96" y="250" fill="#EEF1F5" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="800">Підбери ПК під свій бюджет</text>
+    <text x="96" y="314" fill="#9AA3AF" font-family="system-ui, -apple-system, sans-serif" font-size="28">3 сумісні конфігурації за секунду • Актуальні ціни з Rozetka та Comfy</text>
+    <rect x="96" y="396" width="210" height="48" rx="10" fill="#B6F24A" />
+    <text x="134" y="427" fill="#0E1116" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700">Ціна / якість</text>
+    <rect x="326" y="396" width="210" height="48" rx="10" fill="#FF8A3D" />
+    <text x="366" y="427" fill="#0E1116" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700">Потужність</text>
+    <rect x="556" y="396" width="210" height="48" rx="10" fill="#5CC8FF" />
+    <text x="598" y="427" fill="#0E1116" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700">Технології</text>
+</svg>
