@@ -7,25 +7,44 @@ import com.example.budget.build.PcBuild;
 import com.example.budget.dto.BuildRequest;
 import com.example.budget.dto.BuildResponse;
 import com.example.budget.dto.BuildResultResponse;
+import com.example.budget.model.ComponentOffer;
 import com.example.budget.model.Currency;
 import com.example.budget.model.PcComponent;
+import com.example.budget.repository.ComponentOfferRepository;
 import com.example.budget.repository.PcComponentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class BuildService {
 
     private final PcComponentRepository repository;
     private final CurrencyConversionService conversion;
+    private final ComponentOfferRepository offerRepository;
     private final BuildGenerator generator = new BuildGenerator();
 
-    public BuildService(PcComponentRepository repository, CurrencyConversionService conversion) {
+    @Autowired
+    public BuildService(
+            PcComponentRepository repository,
+            CurrencyConversionService conversion,
+            ComponentOfferRepository offerRepository
+    ) {
         this.repository = repository;
         this.conversion = conversion;
+        this.offerRepository = offerRepository;
+    }
+
+    /** Конструктор для зворотної сумісності зі старими тестами. */
+    public BuildService(PcComponentRepository repository, CurrencyConversionService conversion) {
+        this(repository, conversion, null);
     }
 
     @Transactional(readOnly = true)
@@ -33,6 +52,8 @@ public class BuildService {
         BigDecimal budgetUah = conversion.convert(request.budget(), request.currency(), Currency.UAH);
 
         List<PcComponent> catalog = repository.findAll();
+        applyBestInStockOffers(catalog);
+
         List<GeneratedBuild> generated = generator.generate(
                 catalog, budgetUah, ComponentFilter.of(request.brands()));
 
@@ -48,15 +69,48 @@ public class BuildService {
         return new BuildResultResponse(request.budget(), request.currency(), budgetUah, builds);
     }
 
+    private void applyBestInStockOffers(List<PcComponent> catalog) {
+        if (offerRepository == null) {
+            return;
+        }
+        Map<Long, List<ComponentOffer>> offersByComponentId = offerRepository.findAll().stream()
+                .filter(o -> o.getComponent() != null && o.getComponent().getId() != null)
+                .collect(Collectors.groupingBy(o -> o.getComponent().getId()));
+
+        for (PcComponent c : catalog) {
+            List<ComponentOffer> offers = offersByComponentId.get(c.getId());
+            if (offers == null || offers.isEmpty()) {
+                continue;
+            }
+            Optional<ComponentOffer> bestOffer = offers.stream()
+                    .filter(ComponentOffer::isInStock)
+                    .min(Comparator.comparing(ComponentOffer::getPriceUah));
+
+            if (bestOffer.isPresent()) {
+                ComponentOffer best = bestOffer.get();
+                c.setInStock(true);
+                c.setPriceUah(best.getPriceUah());
+                c.setShopUrl(best.getProductUrl());
+                c.setStoreName(best.getStoreName());
+            } else {
+                c.setInStock(false);
+            }
+        }
+    }
+
     private BuildResponse toResponse(GeneratedBuild generated, Currency currency) {
         PcBuild build = generated.build();
         List<BuildResponse.Part> parts = build.parts().stream()
                 .map(c -> new BuildResponse.Part(
+                        c.getId(),
                         c.getType(),
                         c.getName(),
                         c.getShortSpec(),
                         c.getBrand(),
+                        c.getStoreName(),
+                        c.isInStock(),
                         c.getShopUrl(),
+                        buildAffiliatePath(c.getId()),
                         conversion.convert(c.getPriceUah(), Currency.UAH, currency),
                         c.getPriceUah()))
                 .toList();
@@ -69,6 +123,10 @@ public class BuildService {
                 build.totalPrice(),
                 round1(build.performanceScore()),
                 round1(build.techScore()));
+    }
+
+    private static String buildAffiliatePath(Long componentId) {
+        return componentId != null ? "/api/affiliate/go/" + componentId : null;
     }
 
     private static double round1(double value) {
