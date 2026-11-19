@@ -1,5 +1,3 @@
--- Переводимо параметри пошуку в URL на латиницю (ГБ -> GB, ТБ -> TB),
--- щоб UriComponentsBuilder у AffiliateService коректно додавав UTM-мітки
 UPDATE component_offers co
 SET product_url = CASE co.store_name
                       WHEN 'COMFY' THEN 'https://comfy.ua/ua/search/?q='
@@ -21,7 +19,6 @@ SET product_url = CASE co.store_name
     FROM components c
 WHERE co.component_id = c.id;
 
--- Оновлюємо shop_url у таблиці components із component_offers
 UPDATE components c
 SET shop_url = o.product_url
     FROM component_offers o

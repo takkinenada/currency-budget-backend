@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS component_offers (
 CREATE INDEX IF NOT EXISTS idx_component_offers_component
     ON component_offers(component_id);
 
--- Переносимо вже існуючі посилання з V3-V5 у component_offers
 INSERT INTO component_offers (component_id, store_name, product_url, price_uah, in_stock, last_checked_at)
 SELECT id,
        CASE
@@ -37,7 +36,6 @@ FROM components
 WHERE shop_url IS NOT NULL AND TRIM(shop_url) <> ''
 ON CONFLICT (component_id, store_name) DO NOTHING;
 
--- Синхронізуємо store_name у самій таблиці components
 UPDATE components c
 SET store_name = o.store_name
 FROM component_offers o

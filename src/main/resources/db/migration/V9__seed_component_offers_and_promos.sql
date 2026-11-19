@@ -1,4 +1,3 @@
--- 1. Оновлюємо та додаємо пропозиції ROZETKA для всіх 7 категорій комплектуючих (включно з GPU з V8)
 INSERT INTO component_offers (
     component_id, store_name, external_id, product_url, price_uah, in_stock, last_checked_at
 )
@@ -18,7 +17,6 @@ FROM components c
                                                   in_stock        = EXCLUDED.in_stock,
                                                   last_checked_at = NOW();
 
--- 2. Додаємо пропозиції COMFY з актуальними цінами та прямими посиланнями для всіх категорій
 INSERT INTO component_offers (
     component_id, store_name, external_id, product_url, price_uah, in_stock, last_checked_at
 )
@@ -38,7 +36,6 @@ FROM components c
                                                   in_stock        = EXCLUDED.in_stock,
                                                   last_checked_at = NOW();
 
--- 3. Синхронізуємо найвигіднішу пропозицію в наявності у таблиці components
 UPDATE components c
 SET price_uah        = best.price_uah,
     shop_url         = best.product_url,
@@ -58,7 +55,6 @@ SET price_uah        = best.price_uah,
 ) best
 WHERE best.component_id = c.id;
 
--- 4. Налаштовуємо спонсорські (рекламні) комплектуючі та пріоритет їх показу
 UPDATE components
 SET sponsored        = TRUE,
     is_promo         = TRUE,
