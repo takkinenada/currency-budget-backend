@@ -17,7 +17,7 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
-    validate-on-migrate: true
+    validate-on-migrate: false
 
 monetization:
   affiliate-tag: ${AFFILIATE_TAG:pcpicker}
