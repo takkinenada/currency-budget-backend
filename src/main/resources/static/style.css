@@ -1,4 +1,4 @@
-/* === PCPicker — UI Kit Variables === */
+/* === PCPicker — Dark & Light Theme UI Kit Variables === */
 :root {
     --bg: #0E1116;
     --surface: #171B22;
@@ -13,6 +13,7 @@
     --accent-hover: #C6F76A;
     --accent-text: #B6F24A;
     --on-accent: #0E1116;
+    --tag-ink: #0E1116;
 
     --build-value: #B6F24A;
     --build-power: #FF8A3D;
@@ -21,6 +22,7 @@
     --success: #4ADE80;
     --danger: #FF6B6B;
     --promo: #F5C542;
+    --promo-bg: rgba(245, 197, 66, 0.1);
 
     --space-1: 4px;
     --space-2: 8px;
@@ -37,6 +39,33 @@
 
     --font-sans: "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* === Light Theme Tokens (UI Kit WCAG AA) === */
+[data-theme="light"] {
+    --bg: #F4F6F8;
+    --surface: #FFFFFF;
+    --surface-raised: #EEF1F5;
+    --line: #E2E8F0;
+    --line-strong: #64748B;
+
+    --ink: #0F172A;
+    --ink-muted: #475569;
+
+    --accent: #B6F24A;
+    --accent-hover: #A8E63A;
+    --accent-text: #3F6212;
+    --on-accent: #0E1116;
+    --tag-ink: #FFFFFF;
+
+    --build-value: #3F6212;
+    --build-power: #C2410C;
+    --build-tech: #0369A1;
+
+    --success: #15803D;
+    --danger: #B91C1C;
+    --promo: #A16207;
+    --promo-bg: rgba(161, 98, 7, 0.1);
 }
 
 /* === Reset & Cross-browser Base (Chrome, Safari, Firefox) === */
@@ -62,6 +91,7 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
@@ -98,11 +128,11 @@ input {
 
 /* === Focus Ring === */
 :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-text);
     outline-offset: 2px;
 }
 
-/* === Header === */
+/* === Header & Theme Switcher === */
 .header {
     border-bottom: 1px solid var(--line);
     background-color: var(--bg);
@@ -113,6 +143,7 @@ input {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-4);
 }
 
 .logo {
@@ -132,6 +163,12 @@ input {
     background-color: var(--accent);
     display: inline-block;
     flex-shrink: 0;
+}
+
+.header__right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
 }
 
 .nav-desktop {
@@ -155,13 +192,66 @@ input {
     color: var(--ink);
 }
 
-.burger-btn {
-    display: none;
-    background: none;
+.theme-switch {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    gap: 2px;
+}
+
+.theme-switch__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 30px;
+    padding: 0 12px;
     border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-switch__btn:hover {
+    color: var(--ink);
+}
+
+.theme-switch__btn.is-active {
+    background-color: var(--accent);
+    color: var(--on-accent);
+}
+
+.header__mobile-actions {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.theme-icon-btn,
+.burger-btn {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
     color: var(--ink);
     cursor: pointer;
-    padding: var(--space-1);
+}
+
+.theme-icon-btn {
+    background-color: var(--surface);
+    border-color: var(--line);
+    font-size: 18px;
 }
 
 .nav-mobile {
@@ -179,6 +269,21 @@ input {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
+}
+
+.nav-mobile__theme-row {
+    width: 100%;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.nav-mobile__theme-label {
+    font-size: 13px;
+    color: var(--ink-muted);
 }
 
 /* === Main & Hero === */
@@ -248,7 +353,7 @@ input {
 }
 
 .budget-input-wrap:focus-within {
-    border-color: var(--accent);
+    border-color: var(--line-strong);
 }
 
 .budget-input-wrap.is-invalid {
@@ -361,7 +466,7 @@ input {
     padding: 0 var(--space-4);
     border-radius: var(--radius-pill);
     background-color: var(--surface-raised);
-    border: 1px solid var(--line);
+    border: 1px solid var(--line-strong);
     color: var(--ink);
     font-family: var(--font-sans);
     font-size: 14px;
@@ -372,7 +477,7 @@ input {
 }
 
 .brand-chip:hover {
-    background-color: var(--line);
+    border-color: var(--ink);
 }
 
 .brand-chip.is-selected {
@@ -427,7 +532,7 @@ input {
     justify-content: center;
     height: 44px;
     padding: 0 var(--space-6);
-    background-color: var(--surface-raised);
+    background-color: var(--surface);
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-md);
     color: var(--ink);
@@ -440,7 +545,7 @@ input {
 }
 
 .btn-secondary:hover {
-    background-color: var(--line);
+    background-color: var(--surface-raised);
 }
 
 .btn-secondary--full {
@@ -486,7 +591,7 @@ input {
     font-size: 12px;
     line-height: 16px;
     font-weight: 600;
-    color: var(--on-accent);
+    color: var(--tag-ink);
 }
 
 .tag--value {
@@ -508,7 +613,7 @@ input {
     padding: 0 6px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--promo);
-    background-color: rgba(245, 197, 66, 0.1);
+    background-color: var(--promo-bg);
     color: var(--promo);
     font-family: var(--font-sans);
     font-size: 11px;
@@ -844,7 +949,7 @@ input {
 }
 
 .score-bar__fill.is-best {
-    background-color: var(--accent);
+    background-color: var(--accent-text);
 }
 
 .score-num {
@@ -1003,7 +1108,7 @@ input {
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(15, 23, 42, 0.72);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1162,11 +1267,12 @@ input {
         height: 60px;
     }
 
-    .nav-desktop {
+    .nav-desktop,
+    .header__right > .theme-switch {
         display: none;
     }
 
-    .burger-btn {
+    .header__mobile-actions {
         display: inline-flex;
     }
 

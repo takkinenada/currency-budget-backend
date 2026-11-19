@@ -3,15 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0E1116">
+    <meta name="theme-color" content="#0E1116" id="metaThemeColor">
     <title>PCPicker — Підбери ПК під свій бюджет</title>
+
+    <!-- Миттєве застосування збереженої або системної теми до першого рендеру -->
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('pcpicker-theme');
+                var theme = (saved === 'light' || saved === 'dark')
+                    ? saved
+                    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+                document.documentElement.setAttribute('data-theme', theme);
+                var meta = document.getElementById('metaThemeColor');
+                if (meta) meta.setAttribute('content', theme === 'light' ? '#F4F6F8' : '#0E1116');
+            } catch (e) {}
+        })();
+    </script>
 
     <!-- Оптимізоване неблокуюче підключення шрифтів -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap">
 
-    <!-- Легкий інлайн SVG-фавікон (0 зайвих HTTP-запитів) -->
+    <!-- Інлайн SVG-фавікон -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23B6F24A'/%3E%3C/svg%3E">
 
     <link rel="stylesheet" href="/style.css">
@@ -25,24 +40,54 @@
             <span class="logo__text">PCPicker</span>
         </a>
 
-        <nav class="nav-desktop" aria-label="Головна навігація">
-            <button type="button" class="nav-link" data-modal="howItWorksModal">Як це працює</button>
-            <button type="button" class="nav-link" data-modal="aboutModal">Про проєкт</button>
-        </nav>
+        <div class="header__right">
+            <nav class="nav-desktop" aria-label="Головна навігація">
+                <button type="button" class="nav-link" data-modal="howItWorksModal">Як це працює</button>
+                <button type="button" class="nav-link" data-modal="aboutModal">Про проєкт</button>
+            </nav>
 
-        <button type="button" class="burger-btn" id="burgerBtn" aria-label="Відкрити меню" aria-expanded="false">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </button>
+            <!-- Перемикач теми в шапці (Desktop) -->
+            <div class="theme-switch" role="group" aria-label="Вибір теми оформлення">
+                <button type="button" class="theme-switch__btn" data-theme-set="light" aria-pressed="false">
+                    <span aria-hidden="true">☀️</span> Світла
+                </button>
+                <button type="button" class="theme-switch__btn is-active" data-theme-set="dark" aria-pressed="true">
+                    <span aria-hidden="true">☾</span> Темна
+                </button>
+            </div>
+
+            <!-- Мобільні кнопки: іконка теми 44x44 + бургер -->
+            <div class="header__mobile-actions">
+                <button type="button" class="theme-icon-btn" id="mobileThemeIconBtn" aria-label="Змінити тему">
+                    <span id="mobileThemeGlyph" aria-hidden="true">☀️</span>
+                </button>
+
+                <button type="button" class="burger-btn" id="burgerBtn" aria-label="Відкрити меню" aria-expanded="false">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 
     <div class="nav-mobile" id="mobileMenu" hidden>
         <div class="container nav-mobile__inner">
             <button type="button" class="nav-link" data-modal="howItWorksModal">Як це працює</button>
             <button type="button" class="nav-link" data-modal="aboutModal">Про проєкт</button>
+            <div class="nav-mobile__theme-row">
+                <span class="nav-mobile__theme-label">Тема оформлення</span>
+                <div class="theme-switch" role="group" aria-label="Перемикач теми в меню">
+                    <button type="button" class="theme-switch__btn" data-theme-set="light" aria-pressed="false">
+                        <span aria-hidden="true">☀️</span> Світла
+                    </button>
+                    <button type="button" class="theme-switch__btn is-active" data-theme-set="dark" aria-pressed="true">
+                        <span aria-hidden="true">☾</span> Темна
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </header>
@@ -206,7 +251,7 @@
                 <div class="comparison-header">
                     <h2 class="comparison-header__title" id="comparisonTitle">Порівняння збірок</h2>
                     <p class="comparison-header__subtitle">
-                        Оцінки від 1 до 10 — наша порівняльна шкала. Лаймовим виділено найкраще значення в рядку.
+                        Оцінки від 1 до 10 — наша порівняльна шкала. Кольором виділено найкраще значення в рядку.
                     </p>
                 </div>
 
@@ -253,7 +298,7 @@
     </div>
 </main>
 
-<!-- Модальне вікно «До магазину» -->
+<!-- Модальне вікно «До магазину» (незмінне до наступної задачі) -->
 <div class="modal-backdrop" id="shopModal" hidden>
     <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
         <div class="modal__header">
