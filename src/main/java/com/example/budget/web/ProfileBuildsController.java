@@ -1,9 +1,6 @@
 package com.example.budget.web;
 
-import com.example.budget.model.PcComponent;
-import com.example.budget.model.SavedBuild;
-import com.example.budget.model.SavedBuildItem;
-import com.example.budget.model.User;
+import com.example.budget.model.*;
 import com.example.budget.repository.PcComponentRepository;
 import com.example.budget.repository.SavedBuildRepository;
 import com.example.budget.repository.UserRepository;
@@ -38,6 +35,31 @@ public class ProfileBuildsController {
         if (principal == null) {
             return ResponseEntity.status(401).body("Не авторизовано");
         }
+
+        // 1. Спочатку перевіряємо сумісність сокетів процесора та мат. плати
+        String cpuSocket = null;
+        String mbSocket = null;
+
+        if (request.componentIds() != null) {
+            for (Long componentId : request.componentIds()) {
+                PcComponent component = componentRepository.findById(componentId)
+                        .orElseThrow(() -> new IllegalArgumentException("Компонент не знайдено: " + componentId));
+
+                if (component.getType() == ComponentType.CPU) {
+                    cpuSocket = component.getSocket();
+                }
+                if (component.getType() == ComponentType.MOTHERBOARD) {
+                    mbSocket = component.getSocket();
+                }
+            }
+        }
+
+        // Валідація сокетів
+        if (cpuSocket != null && mbSocket != null && !cpuSocket.equalsIgnoreCase(mbSocket)) {
+            return ResponseEntity.badRequest().body("Помилка сумісності: сокет процесора (" + cpuSocket + ") не збігається з сокетом материнської плати (" + mbSocket + ")");
+        }
+
+        // 2. Якщо все ок — зберігаємо збірку
         User user = userRepository.findByEmail(principal.getName()).orElseThrow();
 
         SavedBuild build = new SavedBuild();
@@ -47,21 +69,17 @@ public class ProfileBuildsController {
 
         BigDecimal totalSavedPrice = BigDecimal.ZERO;
 
-        if (request.componentIds() != null) {
-            for (Long componentId : request.componentIds()) {
-                PcComponent component = componentRepository.findById(componentId)
-                        .orElseThrow(() -> new IllegalArgumentException("Компонент не знайдено: " + componentId));
+        for (Long componentId : request.componentIds()) {
+            PcComponent component = componentRepository.findById(componentId).orElseThrow();
 
-                SavedBuildItem item = new SavedBuildItem();
-                item.setSavedBuild(build);
-                item.setComponent(component);
-                // Заповнюємо обов'язкову категорію з типу компонента
-                item.setCategory(component.getType() != null ? component.getType().name() : "UNKNOWN");
-                item.setSavedPriceUah(component.getPriceUah()); // Фіксуємо ціну на момент збереження
+            SavedBuildItem item = new SavedBuildItem();
+            item.setSavedBuild(build);
+            item.setComponent(component);
+            item.setCategory(component.getType() != null ? component.getType().name() : "UNKNOWN");
+            item.setSavedPriceUah(component.getPriceUah());
 
-                build.getItems().add(item);
-                totalSavedPrice = totalSavedPrice.add(component.getPriceUah());
-            }
+            build.getItems().add(item);
+            totalSavedPrice = totalSavedPrice.add(component.getPriceUah());
         }
 
         build.setTotalSavedPriceUah(totalSavedPrice);
@@ -84,7 +102,6 @@ public class ProfileBuildsController {
 
             for (SavedBuildItem item : b.getItems()) {
                 PcComponent currentComp = item.getComponent();
-                // Беремо поточну ціну з каталогу (або залишаємо збережену, якщо деталь видалили з бази)
                 BigDecimal currentPrice = currentComp != null ? currentComp.getPriceUah() : item.getSavedPriceUah();
                 BigDecimal itemDiff = currentPrice.subtract(item.getSavedPriceUah());
 
