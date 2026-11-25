@@ -35,11 +35,15 @@ public class PriceController {
     }
 
     /**
-     * Ручний запуск оновлення цін і наявності з усіх магазинів.
+     * Ручний запуск оновлення цін.
+     * За замовчуванням оновлює 10 найстаріших/неперевірених пропозицій (~15-20 сек).
+     * Для оновлення всіх: POST /api/prices/refresh?limit=0
      */
     @PostMapping("/prices/refresh")
-    public PriceSyncService.SyncReport refreshPrices() {
-        return priceSyncService.syncAllPrices();
+    public PriceSyncService.SyncReport refreshPrices(
+            @RequestParam(required = false, defaultValue = "10") int limit
+    ) {
+        return priceSyncService.syncPrices(limit);
     }
 
     /**

@@ -35,3 +35,9 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+prices:
+  refresh-cron: "0 0 */6 * * *"
+  request-delay-ms: 500
+  flaresolverr-url: ${}
+  scraper-api-key: ${SCRAPER_API_KEY:}
