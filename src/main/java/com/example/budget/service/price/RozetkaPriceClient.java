@@ -139,7 +139,7 @@ public class RozetkaPriceClient implements StorePriceClient {
     private static boolean isPriceRealistic(BigDecimal found, BigDecimal reference) {
         if (reference == null || reference.compareTo(BigDecimal.ZERO) <= 0) return true;
         double ratio = found.doubleValue() / reference.doubleValue();
-        return ratio >= 0.35 && ratio <= 2.8;
+        return ratio >= 0.20;
     }
 
     private static String extractIdFromUrl(String url) {
