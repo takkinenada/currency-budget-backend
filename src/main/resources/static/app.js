@@ -1015,7 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
             parts: (savedBuild.items || []).map((item) => ({
                 componentId: item.componentId ?? item.id,
                 category: item.category,
-                name: item.name,
+                name: item.componentName || item.name,
                 priceUah: item.currentPriceUah ?? item.savedPriceUah,
                 storeName: item.storeName,
                 inStock: item.inStock

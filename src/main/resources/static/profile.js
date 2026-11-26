@@ -9,14 +9,114 @@
         return `${BASE_URL}${normalized}`;
     }
 
+    function injectEditModalStyles() {
+        if (document.getElementById('pcpEditModalDynamicStyles')) return;
+        const style = document.createElement('style');
+        style.id = 'pcpEditModalDynamicStyles';
+        style.textContent = `
+            .saved-card-actions.saved-card-actions--three {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+                margin-top: auto;
+            }
+            .saved-card-actions.saved-card-actions--three .btn-open-saved-build {
+                grid-column: 1 / -1 !important;
+                width: 100% !important;
+            }
+            .saved-card-actions.saved-card-actions--three .btn-edit-saved-build,
+            .saved-card-actions.saved-card-actions--three .btn-delete-saved-build {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 100% !important;
+                height: 38px !important;
+                padding: 0 12px !important;
+                border-radius: 10px !important;
+                border: 1px solid var(--pcp-border, #282E3A) !important;
+                background: var(--pcp-surface-2, #1D222B) !important;
+                color: var(--pcp-text, #F2F4F8) !important;
+                font-family: inherit !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+                transition: border-color 0.2s, color 0.2s, background-color 0.2s !important;
+            }
+            .saved-card-actions.saved-card-actions--three .btn-edit-saved-build:hover {
+                border-color: var(--pcp-accent, #B6F02B) !important;
+            }
+            .saved-card-actions.saved-card-actions--three .btn-delete-saved-build:hover {
+                border-color: var(--pcp-red, #EF4444) !important;
+                color: var(--pcp-red, #EF4444) !important;
+            }
+            .pcp-edit-modal {
+                max-width: 520px !important;
+                max-height: 90vh !important;
+                overflow-y: auto !important;
+            }
+            .pcp-edit-parts {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .pcp-edit-select {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                width: 100% !important;
+                height: 42px !important;
+                padding: 0 36px 0 14px !important;
+                border-radius: 10px !important;
+                border: 1px solid var(--pcp-border, #282E3A) !important;
+                background-color: var(--pcp-surface-2, #1D222B) !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23939AA8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+                background-repeat: no-repeat !important;
+                background-position: right 12px center !important;
+                color: var(--pcp-text, #F2F4F8) !important;
+                color-scheme: dark !important;
+                font-family: inherit !important;
+                font-size: 13px !important;
+                outline: none !important;
+                cursor: pointer !important;
+            }
+            [data-theme="light"] .pcp-edit-select {
+                color-scheme: light !important;
+            }
+            .pcp-edit-select option {
+                background-color: var(--pcp-surface-2, #1D222B);
+                color: var(--pcp-text, #F2F4F8);
+            }
+            .pcp-edit-select:focus {
+                border-color: var(--pcp-accent, #B6F02B) !important;
+            }
+            .pcp-edit-total-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 14px;
+                border-radius: 10px;
+                background: var(--pcp-surface-2, #1D222B);
+                border: 1px solid var(--pcp-border, #282E3A);
+                font-size: 13px;
+            }
+            .pcp-edit-total-row strong {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 16px;
+                color: var(--pcp-accent, #B6F02B);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     const state = {
         token: localStorage.getItem(TOKEN_KEY) || null,
         user: JSON.parse(localStorage.getItem(USER_KEY) || 'null'),
         authMode: 'login',
         savedBuilds: [],
+        availableComponents: null,
         activeFilter: 'ALL',
         pendingSavePayload: null,
-        pendingSaveButton: null
+        pendingSaveButton: null,
+        editingBuildId: null
     };
 
     const SCENARIO_LABELS = {
@@ -24,6 +124,16 @@
         WORK: 'Монтаж і 3D',
         OFFICE: 'Офіс і навчання',
         UNIVERSAL: 'Універсальний'
+    };
+
+    const CATEGORY_LABELS = {
+        CPU: 'Процесор',
+        GPU: 'Відеокарта',
+        RAM: "Пам'ять",
+        STORAGE: 'Накопичувач',
+        MOTHERBOARD: 'Мат. плата',
+        PSU: 'Блок живлення',
+        CASE: 'Корпус'
     };
 
     function escapeHtml(str) {
@@ -44,6 +154,14 @@
         const d = new Date(isoDate);
         if (Number.isNaN(d.getTime())) return '';
         return 'Збережено ' + d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' });
+    }
+
+    function getBuildId(build) {
+        return build?.buildId ?? build?.id ?? '';
+    }
+
+    function getItemName(item) {
+        return item?.componentName || item?.name || 'Комплектуюча';
     }
 
     function showToast(message) {
@@ -84,21 +202,33 @@
         }
 
         if (!response.ok) {
-            throw new Error(data?.message || data?.error || `Помилка сервера (${response.status})`);
+            const validationMsg = Array.isArray(data?.errors)
+                ? data.errors.map((err) => err.defaultMessage || err.message || err).join(', ')
+                : (data?.errors && typeof data.errors === 'object' ? Object.values(data.errors).join(', ') : null);
+
+            const errorMessage = validationMsg
+                || data?.detail
+                || data?.message
+                || data?.error
+                || (text && text.trim().length > 0 && text.trim().length < 240 ? text.trim() : null)
+                || `Помилка сервера (${response.status})`;
+
+            throw new Error(errorMessage);
         }
 
-        return data;
+        return data !== null ? data : { rawText: text ? text.trim() : '' };
     }
 
     function saveSession(token, userObj, fallbackName) {
-        state.token = token;
+        const cleanToken = String(token || '').replace(/^Bearer\s+/i, '').trim();
+        state.token = cleanToken;
         const displayName = userObj?.name || fallbackName || userObj?.email?.split('@')[0] || 'User';
         state.user = {
             id: userObj?.id || null,
             email: userObj?.email || '',
             name: displayName
         };
-        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(TOKEN_KEY, cleanToken);
         localStorage.setItem(USER_KEY, JSON.stringify(state.user));
         renderHeaderProfile();
     }
@@ -204,12 +334,28 @@
             const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
             const body = isRegister ? { name, email, password } : { email, password };
 
-            const data = await apiFetch(endpoint, {
+            let data = await apiFetch(endpoint, {
                 method: 'POST',
                 body: JSON.stringify(body)
             });
 
-            saveSession(data.token, data.user || { email, name }, name);
+            let token = data?.token || data?.accessToken || data?.jwt
+                || (data?.rawText && data.rawText.startsWith('eyJ') ? data.rawText : null);
+
+            if (isRegister && !token) {
+                data = await apiFetch('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                token = data?.token || data?.accessToken || data?.jwt
+                    || (data?.rawText && data.rawText.startsWith('eyJ') ? data.rawText : null);
+            }
+
+            if (!token) {
+                throw new Error('Сервер не повернув токен авторизації');
+            }
+
+            saveSession(token, data?.user || { email, name }, name);
             closeAuthModal();
             await loadSavedBuilds();
 
@@ -270,14 +416,204 @@
     }
 
     async function deleteSavedBuild(buildId) {
+        if (!buildId) return;
         try {
-            await apiFetch(`/api/profile/builds/${buildId}`, { method: 'DELETE' });
-            state.savedBuilds = state.savedBuilds.filter((b) => b.id !== buildId);
+            await apiFetch(`/api/profile/builds/${encodeURIComponent(buildId)}`, {
+                method: 'DELETE'
+            });
+            state.savedBuilds = state.savedBuilds.filter(
+                (b) => String(getBuildId(b)) !== String(buildId)
+            );
             renderHeaderProfile();
             renderMyBuildsGrid();
             showToast('Збірку видалено з профілю.');
         } catch (err) {
-            showToast(err.message);
+            showToast(err.message || 'Не вдалося видалити збірку');
+        }
+    }
+
+    function ensureEditModalExists() {
+        injectEditModalStyles();
+        let backdrop = document.getElementById('editBuildModal');
+        if (backdrop) return backdrop;
+
+        backdrop = document.createElement('div');
+        backdrop.id = 'editBuildModal';
+        backdrop.className = 'pcp-modal-backdrop';
+        backdrop.hidden = true;
+        backdrop.innerHTML = `
+            <div class="pcp-auth-modal pcp-edit-modal" role="dialog" aria-modal="true" aria-labelledby="editBuildModalTitle">
+                <button type="button" class="pcp-modal-close" id="closeEditBuildModalBtn" aria-label="Закрити">✕</button>
+                <h2 id="editBuildModalTitle" class="auth-modal-title">Редагувати збірку</h2>
+                <p class="auth-modal-subtitle">Зміни назву, сценарій або заміни комплектуючі.</p>
+
+                <form id="editBuildForm" class="auth-form" novalidate>
+                    <div class="auth-field">
+                        <label for="editBuildTitleInput">НАЗВА ЗБІРКИ</label>
+                        <input type="text" id="editBuildTitleInput" required>
+                    </div>
+
+                    <div class="auth-field">
+                        <label for="editBuildScenarioSelect">СЦЕНАРІЙ</label>
+                        <select id="editBuildScenarioSelect" class="pcp-edit-select">
+                            <option value="UNIVERSAL">Універсальний</option>
+                            <option value="GAMING">Ігри</option>
+                            <option value="WORK">Монтаж і 3D</option>
+                            <option value="OFFICE">Офіс і навчання</option>
+                        </select>
+                    </div>
+
+                    <div id="editBuildPartsContainer" class="pcp-edit-parts"></div>
+
+                    <div class="pcp-edit-total-row">
+                        <span>Нова вартість збірки:</span>
+                        <strong id="editBuildTotalPrice">0 ₴</strong>
+                    </div>
+
+                    <div id="editBuildError" class="auth-server-error" hidden></div>
+
+                    <button type="submit" id="saveEditedBuildBtn" class="auth-submit-btn">Зберегти зміни</button>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(backdrop);
+
+        backdrop.addEventListener('click', (e) => {
+            if (e.target === backdrop) closeEditBuildModal();
+        });
+        document.getElementById('closeEditBuildModalBtn')?.addEventListener('click', closeEditBuildModal);
+        document.getElementById('editBuildForm')?.addEventListener('submit', handleEditBuildSubmit);
+
+        return backdrop;
+    }
+
+    function closeEditBuildModal() {
+        const modal = document.getElementById('editBuildModal');
+        if (modal) modal.hidden = true;
+        state.editingBuildId = null;
+        document.body.style.overflow = '';
+    }
+
+    function recalculateEditModalTotal() {
+        const container = document.getElementById('editBuildPartsContainer');
+        const totalEl = document.getElementById('editBuildTotalPrice');
+        if (!container || !totalEl) return;
+
+        let sum = 0;
+        container.querySelectorAll('select[data-edit-part-select]').forEach((sel) => {
+            const opt = sel.options[sel.selectedIndex];
+            sum += Number(opt?.dataset?.price || 0);
+        });
+        totalEl.textContent = formatUah(sum);
+    }
+
+    async function openEditBuildModal(buildId) {
+        const build = state.savedBuilds.find((b) => String(getBuildId(b)) === String(buildId));
+        if (!build) return;
+
+        const modal = ensureEditModalExists();
+        state.editingBuildId = getBuildId(build);
+
+        const titleInput = document.getElementById('editBuildTitleInput');
+        const scenarioSelect = document.getElementById('editBuildScenarioSelect');
+        const partsContainer = document.getElementById('editBuildPartsContainer');
+        const errorBox = document.getElementById('editBuildError');
+
+        titleInput.value = build.title || '';
+        scenarioSelect.value = SCENARIO_LABELS[build.scenario] ? build.scenario : 'UNIVERSAL';
+        errorBox.hidden = true;
+        partsContainer.innerHTML = `<div class="saved-unchanged-note">Завантаження комплектуючих...</div>`;
+
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+
+        if (!state.availableComponents) {
+            try {
+                const comps = await apiFetch('/api/profile/components');
+                state.availableComponents = Array.isArray(comps) ? comps : [];
+            } catch (err) {
+                state.availableComponents = [];
+            }
+        }
+
+        const items = build.items || [];
+        partsContainer.innerHTML = items.map((item) => {
+            const cat = String(item.category || '').toUpperCase();
+            const catLabel = CATEGORY_LABELS[cat] || cat;
+            const currentId = String(item.componentId ?? '');
+
+            let optionsList = state.availableComponents.filter(
+                (c) => String(c.category || '').toUpperCase() === cat
+            );
+
+            if (optionsList.length === 0 && currentId) {
+                optionsList = [{
+                    id: item.componentId,
+                    name: getItemName(item),
+                    category: cat,
+                    priceUah: item.currentPriceUah ?? item.savedPriceUah ?? 0
+                }];
+            }
+
+            const optionsHtml = optionsList.map((opt) => {
+                const selected = String(opt.id) === currentId ? 'selected' : '';
+                return `<option value="${escapeHtml(opt.id)}" data-price="${Number(opt.priceUah || 0)}" ${selected}>
+                    ${escapeHtml(opt.name)} — ${formatUah(opt.priceUah)}
+                </option>`;
+            }).join('');
+
+            return `
+                <div class="auth-field">
+                    <label>${escapeHtml(catLabel)}</label>
+                    <select class="pcp-edit-select" data-edit-part-select>${optionsHtml}</select>
+                </div>
+            `;
+        }).join('');
+
+        partsContainer.querySelectorAll('select[data-edit-part-select]').forEach((sel) => {
+            sel.addEventListener('change', recalculateEditModalTotal);
+        });
+
+        recalculateEditModalTotal();
+    }
+
+    async function handleEditBuildSubmit(event) {
+        event.preventDefault();
+        if (!state.editingBuildId) return;
+
+        const titleInput = document.getElementById('editBuildTitleInput');
+        const scenarioSelect = document.getElementById('editBuildScenarioSelect');
+        const partsContainer = document.getElementById('editBuildPartsContainer');
+        const errorBox = document.getElementById('editBuildError');
+        const submitBtn = document.getElementById('saveEditedBuildBtn');
+
+        const componentIds = Array.from(
+            partsContainer.querySelectorAll('select[data-edit-part-select]')
+        )
+            .map((sel) => Number(sel.value))
+            .filter((id) => !Number.isNaN(id) && id > 0);
+
+        errorBox.hidden = true;
+        submitBtn.disabled = true;
+
+        try {
+            await apiFetch(`/api/profile/builds/${encodeURIComponent(state.editingBuildId)}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    title: titleInput.value.trim(),
+                    scenario: scenarioSelect.value,
+                    componentIds
+                })
+            });
+
+            closeEditBuildModal();
+            showToast('Збірку оновлено.');
+            await loadSavedBuilds();
+        } catch (err) {
+            errorBox.textContent = err.message || 'Помилка оновлення збірки';
+            errorBox.hidden = false;
+        } finally {
+            submitBtn.disabled = false;
         }
     }
 
@@ -295,6 +631,7 @@
     }
 
     function renderMyBuildsGrid() {
+        injectEditModalStyles();
         const grid = document.getElementById('myBuildsGrid');
         const cheaperSummary = document.getElementById('cheaperSummaryBadge');
         if (!grid) return;
@@ -326,6 +663,7 @@
         }
 
         grid.innerHTML = filtered.map((build) => {
+            const bId = getBuildId(build);
             const diff = Number(build.priceDiffUah) || 0;
             const isCheaper = diff < 0;
             const isExpensive = diff > 0;
@@ -347,9 +685,10 @@
                     const itemDiff = Number(item.priceDiffUah);
                     const sign = itemDiff > 0 ? '+' : '-';
                     const cls = itemDiff < 0 ? 'cheaper' : 'expensive';
+                    const catTitle = CATEGORY_LABELS[item.category] || item.category;
                     return `
                                 <div class="saved-change-item">
-                                    <span>${escapeHtml(item.categoryLabel || item.category)} · ${escapeHtml(item.name)}</span>
+                                    <span>${escapeHtml(catTitle)} · ${escapeHtml(getItemName(item))}</span>
                                     <span class="saved-change-diff ${cls}">${sign}${formatUah(Math.abs(itemDiff))}</span>
                                 </div>
                             `;
@@ -378,21 +717,27 @@
 
                     ${changesBlockHtml}
 
-                    <div class="saved-card-actions">
-                        <button type="button" class="btn-open-saved-build" data-open-build-id="${build.id}">Відкрити збірку</button>
-                        <button type="button" class="btn-delete-saved-build" data-delete-build-id="${build.id}">Видалити</button>
+                    <div class="saved-card-actions saved-card-actions--three">
+                        <button type="button" class="btn-open-saved-build" data-open-build-id="${escapeHtml(bId)}">Відкрити</button>
+                        <button type="button" class="btn-edit-saved-build" data-edit-build-id="${escapeHtml(bId)}">Редагувати</button>
+                        <button type="button" class="btn-delete-saved-build" data-delete-build-id="${escapeHtml(bId)}">Видалити</button>
                     </div>
                 </article>
             `;
         }).join('');
 
         grid.querySelectorAll('[data-delete-build-id]').forEach((btn) => {
-            btn.addEventListener('click', () => deleteSavedBuild(Number(btn.dataset.deleteBuildId)));
+            btn.addEventListener('click', () => deleteSavedBuild(btn.dataset.deleteBuildId));
+        });
+
+        grid.querySelectorAll('[data-edit-build-id]').forEach((btn) => {
+            btn.addEventListener('click', () => openEditBuildModal(btn.dataset.editBuildId));
         });
 
         grid.querySelectorAll('[data-open-build-id]').forEach((btn) => {
             btn.addEventListener('click', () => {
-                const build = state.savedBuilds.find((b) => b.id === Number(btn.dataset.openBuildId));
+                const targetId = String(btn.dataset.openBuildId);
+                const build = state.savedBuilds.find((b) => String(getBuildId(b)) === targetId);
                 if (build && typeof window.onOpenSavedBuild === 'function') {
                     closeMyBuildsView();
                     window.onOpenSavedBuild(build);
@@ -402,6 +747,7 @@
     }
 
     async function init() {
+        injectEditModalStyles();
         renderHeaderProfile();
 
         document.getElementById('closeAuthModalBtn')?.addEventListener('click', closeAuthModal);
@@ -410,7 +756,10 @@
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeAuthModal();
+            if (e.key === 'Escape') {
+                closeAuthModal();
+                closeEditBuildModal();
+            }
         });
 
         document.querySelectorAll('.auth-tab').forEach((tab) => {
@@ -422,6 +771,7 @@
         });
 
         document.getElementById('authForm')?.addEventListener('submit', handleAuthSubmit);
+        document.getElementById('authSubmitBtn')?.addEventListener('click', handleAuthSubmit);
         document.getElementById('closeMyBuildsBtn')?.addEventListener('click', closeMyBuildsView);
 
         document.querySelectorAll('#myBuildsFilters .filter-pill').forEach((pill) => {
@@ -436,11 +786,13 @@
         if (state.token) {
             try {
                 const me = await apiFetch('/api/auth/me');
-                saveSession(state.token, me, state.user?.name);
-                await loadSavedBuilds();
-            } catch {
-                clearSession();
+                if (me && !me.rawText) {
+                    saveSession(state.token, me, state.user?.name);
+                }
+            } catch (err) {
+                if (!state.token) return;
             }
+            await loadSavedBuilds();
         }
     }
 
