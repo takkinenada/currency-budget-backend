@@ -10,6 +10,15 @@ public interface StorePriceClient {
 
     Optional<ParsedOffer> fetchOffer(String productUrl, String externalId);
 
+    default Optional<ParsedOffer> fetchOffer(
+            String productUrl,
+            String externalId,
+            String componentName,
+            BigDecimal referencePrice
+    ) {
+        return fetchOffer(productUrl, externalId);
+    }
+
     record ParsedOffer(
             BigDecimal priceUah,
             boolean inStock,

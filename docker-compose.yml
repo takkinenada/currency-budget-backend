@@ -16,5 +16,15 @@ services:
       timeout: 3s
       retries: 10
 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: pcpicker-flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Europe/Kyiv
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
 volumes:
   budget-db-data:
