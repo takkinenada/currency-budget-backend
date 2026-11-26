@@ -187,6 +187,18 @@
                     </div>
                 </div>
 
+                <!-- Перемикач сценаріїв підбору -->
+                <div class="scenario-section">
+                    <div class="brand-row">
+                        <span class="brand-row__label">СЦЕНАРІЙ</span>
+                        <div class="brand-row__chips" id="scenarioChips" role="radiogroup" aria-label="Сценарій використання ПК">
+                            <button type="button" class="scenario-chip is-selected" data-scenario="GAMING" role="radio" aria-checked="true">Ігри</button>
+                            <button type="button" class="scenario-chip" data-scenario="WORK" role="radio" aria-checked="false">Робота і монтаж</button>
+                            <button type="button" class="scenario-chip" data-scenario="OFFICE" role="radio" aria-checked="false">Офіс і навчання</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="brands-section">
                     <div class="brand-row">
                         <span class="brand-row__label">ПРОЦЕСОР</span>
@@ -391,6 +403,22 @@
     </div>
 </div>
 
+<!-- Модальне вікно заміни комплектуючої -->
+<div class="modal-backdrop" id="replacePartModal" hidden>
+    <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="replaceModalTitle">
+        <div class="modal__header">
+            <div>
+                <span class="tag tag--value" id="replaceModalCategoryTag">Процесор</span>
+                <h3 class="modal__title" id="replaceModalTitle" style="margin-top: 10px;">Замінити комплектуючу</h3>
+                <p class="modal__subtitle" id="replaceModalSubtitle">Показано лише сумісні варіанти для цієї збірки.</p>
+            </div>
+            <button type="button" class="modal__close" data-close-modal aria-label="Закрити">✕</button>
+        </div>
+
+        <div class="shop-list" id="replaceModalList"></div>
+    </div>
+</div>
+
 <!-- Модальне вікно «До магазину» (Rozetka / Comfy + наявність + партнерський редирект) -->
 <div class="modal-backdrop" id="shopModal" hidden>
     <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
@@ -429,8 +457,8 @@
         </div>
         <div class="modal__body">
             <p>1. Вкажіть свій бюджет у гривнях, доларах або євро — сума автоматично перераховується за актуальним курсом.</p>
-            <p>2. За бажанням оберіть виробників процесора та відеокарти.</p>
-            <p>3. Алгоритм перевіряє сумісність сокетів, оперативної пам'яті (DDR4/DDR5), потужність блока живлення та формує 3 готові конфігурації.</p>
+            <p>2. Оберіть сценарій використання ПК («Ігри», «Робота і монтаж» або «Офіс і навчання») та бажаних виробників.</p>
+            <p>3. Алгоритм перевіряє сумісність сокетів, оперативної пам'яті (DDR4/DDR5), потужність блока живлення та дає змогу замінити будь-яку деталь на сумісну.</p>
         </div>
     </div>
 </div>

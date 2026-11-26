@@ -79,7 +79,7 @@ function apiUrl(path) {
     });
 })();
 
-/* === 2. Основна логіка PCPicker (бюджет, валюти, фільтри, збірки, магазини, редиректи) === */
+/* === 2. Основна логіка PCPicker (бюджет, сценарії, валюти, заміна деталей, магазини) === */
 document.addEventListener('DOMContentLoaded', () => {
     const MIN_BUDGET_UAH = 15000;
     const MAX_BUDGET_UAH = 500000;
@@ -90,9 +90,111 @@ document.addEventListener('DOMContentLoaded', () => {
         EUR: '€'
     };
 
+    function injectInteractiveStyles() {
+        if (document.getElementById('pcpInteractiveBuildStyles')) return;
+        const style = document.createElement('style');
+        style.id = 'pcpInteractiveBuildStyles';
+        style.textContent = `
+            .scenario-section {
+                padding-top: 14px;
+                border-top: 1px solid var(--border, #282E3A);
+            }
+            .scenario-chip {
+                height: 36px;
+                padding: 0 14px;
+                border-radius: 999px;
+                border: 1px solid var(--border, #282E3A);
+                background: var(--surface-2, #1D222B);
+                color: var(--text, #F2F4F8);
+                font-family: inherit;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+            }
+            .scenario-chip:hover {
+                border-color: var(--accent, #B6F24A);
+            }
+            .scenario-chip.is-selected {
+                background: var(--accent, #B6F24A);
+                border-color: var(--accent, #B6F24A);
+                color: #0E1116;
+            }
+            .part-row__right {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 4px;
+                flex-shrink: 0;
+            }
+            .part-row__replace-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                height: 24px;
+                padding: 0 8px;
+                border-radius: 6px;
+                border: 1px solid var(--border, #282E3A);
+                background: transparent;
+                color: var(--text-muted, #939AA8);
+                font-family: inherit;
+                font-size: 11px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+            }
+            .part-row__replace-btn:hover {
+                border-color: var(--accent, #B6F24A);
+                color: var(--accent, #B6F24A);
+            }
+            [data-theme="light"] .part-row__replace-btn:hover {
+                border-color: #4F770A;
+                color: #3D5E06;
+            }
+            .build-card__budget-over {
+                font-size: 12px;
+                font-weight: 600;
+                color: #F59E0B;
+                margin-bottom: 12px;
+            }
+            .alt-diff-pill {
+                display: inline-flex;
+                align-items: center;
+                height: 22px;
+                padding: 0 8px;
+                border-radius: 999px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 11px;
+                font-weight: 700;
+            }
+            .alt-diff-pill--cheaper {
+                background: rgba(34, 197, 94, 0.14);
+                color: #22C55E;
+            }
+            .alt-diff-pill--expensive {
+                background: rgba(239, 68, 68, 0.14);
+                color: #EF4444;
+            }
+            .alt-diff-pill--same {
+                background: var(--surface-2, #1D222B);
+                color: var(--text-muted, #939AA8);
+            }
+            .replace-empty-note {
+                padding: 20px;
+                text-align: center;
+                color: var(--text-muted, #939AA8);
+                font-size: 14px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    injectInteractiveStyles();
+
     const state = {
         currency: 'UAH',
         baseBudgetUah: 40000,
+        scenario: 'GAMING',
         rates: {
             UAH: 1,
             USD: 41.5,
@@ -104,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lastBuilds: [],
         lastBudgetAmount: 40000,
         lastCurrency: 'UAH',
+        lastScenario: 'GAMING',
         hasGenerated: false
     };
 
@@ -135,6 +238,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const shopModalList = document.getElementById('shopModalList');
     const shopModalStoresSummary = document.getElementById('shopModalStoresSummary');
     const shopModalTotal = document.getElementById('shopModalTotal');
+
+    const replacePartModal = document.getElementById('replacePartModal');
+    const replaceModalCategoryTag = document.getElementById('replaceModalCategoryTag');
+    const replaceModalTitle = document.getElementById('replaceModalTitle');
+    const replaceModalSubtitle = document.getElementById('replaceModalSubtitle');
+    const replaceModalList = document.getElementById('replaceModalList');
 
     // Завантаження курсів валют та промо-міток із API
     fetchRates();
@@ -280,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Перемикач валют (₴ / $ / €) без накопичення похибки округлення
+    // Перемикач валют (₴ / $ / €)
     document.querySelectorAll('.currency-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
             const nextCurrency = btn.getAttribute('data-currency');
@@ -299,6 +408,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             clearBudgetError();
             updateBudgetHint();
+
+            if (state.hasGenerated && state.lastBuilds.length > 0) {
+                state.lastCurrency = nextCurrency;
+                state.lastBudgetAmount = fromUah(state.baseBudgetUah, nextCurrency);
+                renderResults(state.lastBuilds, state.lastBudgetAmount, nextCurrency);
+            }
+        });
+    });
+
+    // Перемикач сценаріїв підбору («Ігри», «Робота і монтаж», «Офіс і навчання»)
+    document.querySelectorAll('.scenario-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+            const nextScenario = chip.getAttribute('data-scenario');
+            if (!nextScenario) return;
+            state.scenario = nextScenario;
+
+            document.querySelectorAll('.scenario-chip').forEach((c) => {
+                const active = c === chip;
+                c.classList.toggle('is-selected', active);
+                c.setAttribute('aria-checked', String(active));
+            });
         });
     });
 
@@ -523,7 +653,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = {
             budget: enteredAmount,
             currency: state.currency,
-            brands: selectedBrands
+            brands: selectedBrands,
+            scenario: state.scenario
         };
 
         try {
@@ -549,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.lastBuilds = filteredBuilds.slice(0, 3);
             state.lastBudgetAmount = enteredAmount;
             state.lastCurrency = state.currency;
+            state.lastScenario = state.scenario;
             state.hasGenerated = true;
 
             if (formCard) formCard.classList.add('is-compact');
@@ -724,6 +856,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 rawCategory: rawCat,
                 categoryLabel: CATEGORY_LABELS[rawCat] || 'Комплектуюча',
                 name: p.name || 'Комплектуюча',
+                socket: p.socket || null,
+                ramType: p.ramType || p.memoryType || null,
+                brand: p.brand || p.manufacturer || null,
                 priceUah,
                 displayPrice,
                 storeName,
@@ -748,7 +883,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const totalUah = Number(build.totalPriceUah ?? build.totalPrice ?? parts.reduce((acc, p) => acc + p.priceUah, 0));
                 const totalDisplay = currency === 'UAH' ? totalUah : fromUah(totalUah, currency);
 
-                const partsHtml = parts.map((part) => `
+                const isWithinBudget = totalDisplay <= budgetAmount;
+                const budgetDiff = Math.abs(totalDisplay - budgetAmount);
+                const budgetStatusHtml = isWithinBudget
+                    ? `<div class="build-card__budget-ok">✓ Вкладається в бюджет ${formatMoney(budgetAmount, currency)}</div>`
+                    : `<div class="build-card__budget-over">⚠ Перевищує бюджет на ${formatMoney(budgetDiff, currency)}</div>`;
+
+                const partsHtml = parts.map((part, partIdx) => `
                     <div class="part-row">
                         <div class="part-row__left">
                             <span class="part-row__icon" aria-hidden="true">${getCategoryIconSvg(part.rawCategory)}</span>
@@ -760,7 +901,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="part-row__name" title="${escapeHtml(part.name)}">${escapeHtml(part.name)}</div>
                             </div>
                         </div>
-                        <span class="part-row__price">${formatMoney(part.displayPrice, currency)}</span>
+                        <div class="part-row__right">
+                            <span class="part-row__price">${formatMoney(part.displayPrice, currency)}</span>
+                            <button
+                                type="button"
+                                class="part-row__replace-btn"
+                                data-replace-build="${idx}"
+                                data-replace-part="${partIdx}"
+                                title="Замінити комплектуючу"
+                                aria-label="Замінити ${escapeHtml(part.categoryLabel)}"
+                            >⇄ Замінити</button>
+                        </div>
                     </div>
                 `).join('');
 
@@ -777,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="build-card__total-label">Разом</span>
                                 <span class="build-card__total-value">${formatMoney(totalDisplay, currency)}</span>
                             </div>
-                            <div class="build-card__budget-ok">✓ Вкладається в бюджет ${formatMoney(budgetAmount, currency)}</div>
+                            ${budgetStatusHtml}
                             <div class="build-card__actions">
                                 <button type="button" class="btn-primary build-card__shop-btn" data-open-shop="${idx}">До магазину</button>
                                 <button type="button" class="btn-save-build" data-save-build="${idx}">🔖 Зберегти</button>
@@ -786,6 +937,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </article>
                 `;
             }).join('');
+
+            buildsGrid.querySelectorAll('[data-replace-build]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const buildIdx = Number(btn.getAttribute('data-replace-build'));
+                    const partIdx = Number(btn.getAttribute('data-replace-part'));
+                    openReplacePartModal(buildIdx, partIdx);
+                });
+            });
 
             buildsGrid.querySelectorAll('[data-open-shop]').forEach((btn) => {
                 btn.addEventListener('click', () => {
@@ -809,7 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     window.PCPickerProfile.saveBuild({
                         title,
-                        scenario: build.scenario || 'UNIVERSAL',
+                        scenario: build.scenario || state.lastScenario || 'GAMING',
                         componentIds
                     }, btn);
                 });
@@ -819,6 +978,196 @@ document.addEventListener('DOMContentLoaded', () => {
         renderComparison(builds, budgetAmount, currency);
 
         if (resultsSection) resultsSection.hidden = false;
+    }
+
+    async function openReplacePartModal(buildIdx, partIdx) {
+        const build = state.lastBuilds[buildIdx];
+        if (!build || !replacePartModal) return;
+
+        const meta = BUILD_META[buildIdx] || BUILD_META[0];
+        const parts = normalizeParts(build);
+        const currentPart = parts[partIdx];
+        if (!currentPart) return;
+
+        if (replaceModalCategoryTag) {
+            replaceModalCategoryTag.className = `tag ${meta.tagClass}`;
+            replaceModalCategoryTag.textContent = currentPart.categoryLabel;
+        }
+        if (replaceModalTitle) {
+            replaceModalTitle.textContent = `Замінити: ${currentPart.name}`;
+        }
+        if (replaceModalSubtitle) {
+            replaceModalSubtitle.textContent = `Поточна ціна: ${formatMoney(currentPart.displayPrice, state.lastCurrency)} • Сумісні варіанти для цієї збірки`;
+        }
+        if (replaceModalList) {
+            replaceModalList.innerHTML = `<div class="replace-empty-note">Пошук сумісних комплектуючих...</div>`;
+        }
+
+        replacePartModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+
+        const params = new URLSearchParams();
+        params.set('category', currentPart.rawCategory);
+        params.set('type', currentPart.rawCategory);
+        if (currentPart.componentId !== null) {
+            params.set('componentId', String(currentPart.componentId));
+        }
+
+        const cpuPart = parts.find((p) => p.rawCategory === 'CPU');
+        const mbPart = parts.find((p) => p.rawCategory === 'MOTHERBOARD');
+        const ramPart = parts.find((p) => p.rawCategory === 'RAM');
+        const gpuPart = parts.find((p) => p.rawCategory === 'GPU');
+        const psuPart = parts.find((p) => p.rawCategory === 'PSU');
+        const casePart = parts.find((p) => p.rawCategory === 'CASE');
+
+        if (cpuPart?.componentId != null) params.set('cpuId', String(cpuPart.componentId));
+        if (mbPart?.componentId != null) params.set('motherboardId', String(mbPart.componentId));
+        if (ramPart?.componentId != null) params.set('ramId', String(ramPart.componentId));
+        if (gpuPart?.componentId != null) params.set('gpuId', String(gpuPart.componentId));
+        if (psuPart?.componentId != null) params.set('psuId', String(psuPart.componentId));
+        if (casePart?.componentId != null) params.set('caseId', String(casePart.componentId));
+
+        const socket = cpuPart?.socket || mbPart?.socket;
+        if (socket) params.set('socket', socket);
+
+        const ramType = ramPart?.ramType || mbPart?.ramType;
+        if (ramType) params.set('ramType', ramType);
+
+        params.set('budget', String(state.baseBudgetUah));
+        params.set('currency', state.lastCurrency);
+
+        try {
+            const response = await fetch(apiUrl(`/api/components/compatible?${params.toString()}`));
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const alternatives = Array.isArray(data)
+                ? data
+                : (data.components || data.items || data.alternatives || data.content || []);
+
+            if (!alternatives || alternatives.length === 0) {
+                if (replaceModalList) {
+                    replaceModalList.innerHTML = `<div class="replace-empty-note">Сумісних альтернатив для цієї деталі не знайдено.</div>`;
+                }
+                return;
+            }
+
+            if (replaceModalList) {
+                replaceModalList.innerHTML = alternatives.map((alt, altIdx) => {
+                    const altId = alt.componentId ?? alt.id ?? null;
+                    const altPriceUah = Number(alt.priceUah ?? alt.price ?? 0);
+                    const altDisplayPrice = state.lastCurrency === 'UAH'
+                        ? altPriceUah
+                        : fromUah(altPriceUah, state.lastCurrency);
+
+                    const diffUah = altPriceUah - currentPart.priceUah;
+                    const diffAbsDisplay = fromUah(Math.abs(diffUah), state.lastCurrency);
+
+                    let diffBadgeHtml = `<span class="alt-diff-pill alt-diff-pill--same">Та сама ціна</span>`;
+                    if (diffUah < 0) {
+                        diffBadgeHtml = `<span class="alt-diff-pill alt-diff-pill--cheaper">-${formatMoney(diffAbsDisplay, state.lastCurrency)}</span>`;
+                    } else if (diffUah > 0) {
+                        diffBadgeHtml = `<span class="alt-diff-pill alt-diff-pill--expensive">+${formatMoney(diffAbsDisplay, state.lastCurrency)}</span>`;
+                    }
+
+                    const storeName = normalizeStoreDisplayName(alt.storeName ?? alt.store_name);
+                    const inStock = alt.inStock !== undefined ? Boolean(alt.inStock) : (alt.in_stock !== undefined ? Boolean(alt.in_stock) : true);
+                    const isCurrent = altId !== null && currentPart.componentId !== null && String(altId) === String(currentPart.componentId);
+                    const specInfo = [alt.socket, alt.ramType || alt.memoryType, alt.specs].filter(Boolean).join(' • ');
+
+                    const stockBadge = inStock
+                        ? '<span class="stock-pill stock-pill--in"><span class="stock-pill__dot" aria-hidden="true"></span>В наявності</span>'
+                        : '<span class="stock-pill stock-pill--out"><span class="stock-pill__dot" aria-hidden="true"></span>Немає в наявності</span>';
+
+                    const actionBtn = isCurrent
+                        ? '<button type="button" class="shop-buy-btn shop-buy-btn--disabled" disabled>Поточна</button>'
+                        : `<button type="button" class="shop-buy-btn" data-select-alt="${altIdx}">Обрати</button>`;
+
+                    return `
+                        <div class="shop-item">
+                            <div class="shop-item__left">
+                                <div class="shop-item__meta">
+                                    <span class="shop-item__cat">${escapeHtml(currentPart.categoryLabel)}</span>
+                                    ${diffBadgeHtml}
+                                </div>
+                                <div class="shop-item__name">${escapeHtml(alt.name || 'Комплектуюча')}</div>
+                                <div class="shop-item__badges">
+                                    <span class="store-pill">${escapeHtml(storeName)}</span>
+                                    ${stockBadge}
+                                    ${specInfo ? `<span class="store-pill">${escapeHtml(specInfo)}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="shop-item__right">
+                                <span class="shop-item__price">${formatMoney(altDisplayPrice, state.lastCurrency)}</span>
+                                ${actionBtn}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                replaceModalList.querySelectorAll('[data-select-alt]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const altIdx = Number(btn.getAttribute('data-select-alt'));
+                        const selectedAlt = alternatives[altIdx];
+                        if (selectedAlt) {
+                            applyPartReplacement(buildIdx, partIdx, selectedAlt);
+                        }
+                    });
+                });
+            }
+        } catch (err) {
+            console.error('Помилка завантаження альтернатив:', err);
+            if (replaceModalList) {
+                replaceModalList.innerHTML = `<div class="replace-empty-note">Не вдалося завантажити сумісні комплектуючі.</div>`;
+            }
+        }
+    }
+
+    function applyPartReplacement(buildIdx, partIdx, selectedAlt) {
+        const build = state.lastBuilds[buildIdx];
+        if (!build) return;
+
+        const sourceKey = Array.isArray(build.parts) ? 'parts' : 'components';
+        const list = Array.isArray(build[sourceKey]) ? [...build[sourceKey]] : [];
+        const oldPart = list[partIdx];
+        if (!oldPart) return;
+
+        const altId = selectedAlt.componentId ?? selectedAlt.id ?? null;
+        const altPriceUah = Number(selectedAlt.priceUah ?? selectedAlt.price ?? 0);
+
+        list[partIdx] = {
+            ...oldPart,
+            componentId: altId,
+            id: altId,
+            category: selectedAlt.category || selectedAlt.type || oldPart.category || oldPart.type,
+            type: selectedAlt.type || selectedAlt.category || oldPart.type || oldPart.category,
+            name: selectedAlt.name || oldPart.name,
+            priceUah: altPriceUah,
+            price: altPriceUah,
+            currency: 'UAH',
+            socket: selectedAlt.socket ?? oldPart.socket,
+            ramType: selectedAlt.ramType ?? selectedAlt.memoryType ?? oldPart.ramType,
+            brand: selectedAlt.brand ?? selectedAlt.manufacturer ?? oldPart.brand,
+            storeName: selectedAlt.storeName ?? selectedAlt.store_name ?? oldPart.storeName,
+            inStock: selectedAlt.inStock !== undefined ? selectedAlt.inStock : (selectedAlt.in_stock !== undefined ? selectedAlt.in_stock : true),
+            affiliateUrl: selectedAlt.affiliateUrl || (altId !== null ? `/api/affiliate/go/${encodeURIComponent(altId)}` : oldPart.affiliateUrl),
+            promoLabel: selectedAlt.promoLabel ?? selectedAlt.promo_label ?? null,
+            sponsored: Boolean(selectedAlt.sponsored || selectedAlt.promoLabel || selectedAlt.promo_label)
+        };
+
+        const newTotalUah = list.reduce((sum, item) => sum + Number(item.priceUah ?? item.price ?? 0), 0);
+
+        build.parts = list;
+        if (sourceKey !== 'parts') {
+            delete build[sourceKey];
+        }
+        build.totalPriceUah = newTotalUah;
+        build.totalPrice = newTotalUah;
+
+        closeAllModals();
+        renderResults(state.lastBuilds, state.lastBudgetAmount, state.lastCurrency);
     }
 
     function openShopModal(buildIndex) {
@@ -1023,9 +1372,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         state.lastBuilds = [mappedBuild];
         state.lastCurrency = 'UAH';
+        state.lastBudgetAmount = Number(mappedBuild.totalPriceUah) || state.baseBudgetUah;
+        state.hasGenerated = true;
         if (benefitsSection) benefitsSection.hidden = true;
         if (emptySection) emptySection.hidden = true;
-        renderResults(state.lastBuilds, Number(mappedBuild.totalPriceUah) || state.baseBudgetUah, 'UAH');
+        renderResults(state.lastBuilds, state.lastBudgetAmount, 'UAH');
         if (resultsTitle) {
             resultsTitle.textContent = `Збережена збірка: ${savedBuild.title}`;
         }
