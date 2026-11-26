@@ -778,7 +778,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="build-card__total-value">${formatMoney(totalDisplay, currency)}</span>
                             </div>
                             <div class="build-card__budget-ok">✓ Вкладається в бюджет ${formatMoney(budgetAmount, currency)}</div>
-                            <button type="button" class="btn-primary btn-primary--full" data-open-shop="${idx}">До магазину</button>
+                            <div class="build-card__actions">
+                                <button type="button" class="btn-primary build-card__shop-btn" data-open-shop="${idx}">До магазину</button>
+                                <button type="button" class="btn-save-build" data-save-build="${idx}">🔖 Зберегти</button>
+                            </div>
                         </div>
                     </article>
                 `;
@@ -788,6 +791,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.addEventListener('click', () => {
                     const idx = Number(btn.getAttribute('data-open-shop'));
                     openShopModal(idx);
+                });
+            });
+
+            buildsGrid.querySelectorAll('[data-save-build]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const idx = Number(btn.getAttribute('data-save-build'));
+                    const build = state.lastBuilds[idx];
+                    if (!build || !window.PCPickerProfile) return;
+
+                    const meta = BUILD_META[idx] || BUILD_META[0];
+                    const parts = normalizeParts(build);
+                    const title = build.title || build.name || meta.defaultTitle;
+                    const componentIds = parts
+                        .map((p) => p.componentId)
+                        .filter((id) => id !== null && id !== undefined);
+
+                    window.PCPickerProfile.saveBuild({
+                        title,
+                        scenario: build.scenario || 'UNIVERSAL',
+                        componentIds
+                    }, btn);
                 });
             });
         }
@@ -980,4 +1004,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         comparisonContainer.innerHTML = desktopHtml + mobileHtml;
     }
+
+    // Відкриття збереженої збірки з особистого кабінету
+    window.onOpenSavedBuild = function (savedBuild) {
+        if (!savedBuild) return;
+        const mappedBuild = {
+            title: savedBuild.title,
+            scenario: savedBuild.scenario,
+            totalPriceUah: savedBuild.currentTotalPriceUah ?? savedBuild.savedTotalPriceUah,
+            parts: (savedBuild.items || []).map((item) => ({
+                componentId: item.componentId ?? item.id,
+                category: item.category,
+                name: item.name,
+                priceUah: item.currentPriceUah ?? item.savedPriceUah,
+                storeName: item.storeName,
+                inStock: item.inStock
+            }))
+        };
+        state.lastBuilds = [mappedBuild];
+        state.lastCurrency = 'UAH';
+        if (benefitsSection) benefitsSection.hidden = true;
+        if (emptySection) emptySection.hidden = true;
+        renderResults(state.lastBuilds, Number(mappedBuild.totalPriceUah) || state.baseBudgetUah, 'UAH');
+        if (resultsTitle) {
+            resultsTitle.textContent = `Збережена збірка: ${savedBuild.title}`;
+        }
+        if (resultsSection) {
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 });
