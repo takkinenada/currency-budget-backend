@@ -13,9 +13,14 @@ public record BuildRequest(
         Set<Brand> brands,
         BuildScenario scenario
 ) {
+    // Конструктор для 3 аргументів (щоб старі тести/виклики не ламалися)
+    public BuildRequest(BigDecimal budget, Currency currency, Set<Brand> brands) {
+        this(budget, currency, brands, BuildScenario.GAMING);
+    }
+
     public BuildRequest {
         if (scenario == null) {
-            scenario = BuildScenario.GAMING; // Значення за замовчуванням
+            scenario = BuildScenario.GAMING;
         }
     }
 }
