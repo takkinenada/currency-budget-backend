@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
+
+
+    <link rel="stylesheet" href="/style.css?v=2">
+    <link rel="stylesheet" href="/profile.css?v=2">
+    <script src="/app.js?v=9" defer></script>
+    <script src="/profile.js?v=3" defer></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0E1116" id="metaThemeColor">
@@ -53,7 +60,9 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23B6F24A'/%3E%3C/svg%3E">
 
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/profile.css">
     <script src="/app.js" defer></script>
+    <script src="/profile.js" defer></script>
 </head>
 <body>
 <header class="header">
@@ -77,6 +86,11 @@
                 <button type="button" class="theme-switch__btn is-active" data-theme-set="dark" aria-pressed="true">
                     <span aria-hidden="true">☾</span> Темна
                 </button>
+            </div>
+
+            <!-- Слот кнопки профілю / входу -->
+            <div id="headerProfileSlot" class="header-profile-slot">
+                <button type="button" class="btn-header-login" id="openAuthModalBtn">Увійти</button>
             </div>
 
             <!-- Мобільні кнопки: іконка теми 44x44 + бургер -->
@@ -117,6 +131,28 @@
 
 <main class="main">
     <div class="container">
+        <!-- Особистий кабінет: «Мої збірки» -->
+        <section id="myBuildsSection" class="my-builds-section" hidden aria-label="Мої збережені збірки">
+            <div class="my-builds-header">
+                <div>
+                    <h1 class="my-builds-title">Мої збірки</h1>
+                    <p class="my-builds-subtitle">Ціни оновлюються щодня. Зелена рамка — збірка подешевшала.</p>
+                </div>
+                <div class="my-builds-header-actions">
+                    <div id="cheaperSummaryBadge" class="cheaper-summary-badge" hidden></div>
+                    <button type="button" class="btn-back-to-builder" id="closeMyBuildsBtn">← До підбору ПК</button>
+                </div>
+            </div>
+
+            <div class="my-builds-filters" id="myBuildsFilters">
+                <button type="button" class="filter-pill active" data-filter="ALL">Усі · <span id="countAll">0</span></button>
+                <button type="button" class="filter-pill" data-filter="CHEAPER">Подешевшали · <span id="countCheaper">0</span></button>
+                <button type="button" class="filter-pill" data-filter="EXPENSIVE">Подорожчали · <span id="countExpensive">0</span></button>
+            </div>
+
+            <div id="myBuildsGrid" class="my-builds-grid"></div>
+        </section>
+
         <!-- Hero -->
         <section class="hero" id="heroSection">
             <h1 class="hero__title">Підбери ПК під свій бюджет</h1>
@@ -155,6 +191,18 @@
 
                     <div class="error-action" id="errorAction" hidden>
                         <button type="button" class="btn-secondary" id="quickFixBtn">Показати збірку за 15 000 ₴</button>
+                    </div>
+                </div>
+
+                <!-- Перемикач сценаріїв підбору -->
+                <div class="scenario-section">
+                    <div class="brand-row">
+                        <span class="brand-row__label">СЦЕНАРІЙ</span>
+                        <div class="brand-row__chips" id="scenarioChips" role="radiogroup" aria-label="Сценарій використання ПК">
+                            <button type="button" class="scenario-chip is-selected" data-scenario="GAMING" role="radio" aria-checked="true">Ігри</button>
+                            <button type="button" class="scenario-chip" data-scenario="WORK" role="radio" aria-checked="false">Робота і монтаж</button>
+                            <button type="button" class="scenario-chip" data-scenario="OFFICE" role="radio" aria-checked="false">Офіс і навчання</button>
+                        </div>
                     </div>
                 </div>
 
@@ -321,6 +369,64 @@
     </div>
 </main>
 
+<!-- Модальне вікно входу / реєстрації -->
+<div id="authModal" class="pcp-modal-backdrop" hidden>
+    <div class="pcp-auth-modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <button type="button" class="pcp-modal-close" id="closeAuthModalBtn" aria-label="Закрити">✕</button>
+
+        <h2 id="authModalTitle" class="auth-modal-title">Вхід у PCPicker</h2>
+        <p class="auth-modal-subtitle">Щоб зберігати збірки і бачити, коли ціна падає.</p>
+
+        <div class="auth-tabs" role="tablist">
+            <button type="button" class="auth-tab active" data-auth-tab="login">Вхід</button>
+            <button type="button" class="auth-tab" data-auth-tab="register">Реєстрація</button>
+        </div>
+
+        <form id="authForm" class="auth-form" novalidate>
+            <div class="auth-field" id="authNameGroup" hidden>
+                <label for="authNameInput">ІМ'Я</label>
+                <input type="text" id="authNameInput" name="name" placeholder="Введіть ваше ім'я" autocomplete="name">
+            </div>
+
+            <div class="auth-field">
+                <label for="authEmailInput">EMAIL</label>
+                <input type="email" id="authEmailInput" name="email" placeholder="example@gmail.com" required autocomplete="email">
+                <span id="authEmailError" class="auth-field-error" hidden>Введіть коректний email (наприклад, name@gmail.com)</span>
+            </div>
+
+            <div class="auth-field">
+                <label for="authPasswordInput">ПАРОЛЬ</label>
+                <input type="password" id="authPasswordInput" name="password" placeholder="••••••••" required autocomplete="current-password">
+                <span id="authPasswordError" class="auth-field-error" hidden>Мінімум 8 символів, хоча б 1 літера та 1 цифра</span>
+            </div>
+
+            <div id="authServerError" class="auth-server-error" hidden></div>
+
+            <button type="submit" id="authSubmitBtn" class="auth-submit-btn">Увійти</button>
+
+            <button type="button" id="authSwitchModeBtn" class="auth-switch-link">
+                Немає акаунта? Зареєструватися
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Модальне вікно заміни комплектуючої -->
+<div class="modal-backdrop" id="replacePartModal" hidden>
+    <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="replaceModalTitle">
+        <div class="modal__header">
+            <div>
+                <span class="tag tag--value" id="replaceModalCategoryTag">Процесор</span>
+                <h3 class="modal__title" id="replaceModalTitle" style="margin-top: 10px;">Замінити комплектуючу</h3>
+                <p class="modal__subtitle" id="replaceModalSubtitle">Показано лише сумісні варіанти для цієї збірки.</p>
+            </div>
+            <button type="button" class="modal__close" data-close-modal aria-label="Закрити">✕</button>
+        </div>
+
+        <div class="shop-list" id="replaceModalList"></div>
+    </div>
+</div>
+
 <!-- Модальне вікно «До магазину» (Rozetka / Comfy + наявність + партнерський редирект) -->
 <div class="modal-backdrop" id="shopModal" hidden>
     <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="shopModalTitle">
@@ -359,8 +465,8 @@
         </div>
         <div class="modal__body">
             <p>1. Вкажіть свій бюджет у гривнях, доларах або євро — сума автоматично перераховується за актуальним курсом.</p>
-            <p>2. За бажанням оберіть виробників процесора та відеокарти.</p>
-            <p>3. Алгоритм перевіряє сумісність сокетів, оперативної пам'яті (DDR4/DDR5), потужність блока живлення та формує 3 готові конфігурації.</p>
+            <p>2. Оберіть сценарій використання ПК («Ігри», «Робота і монтаж» або «Офіс і навчання») та бажаних виробників.</p>
+            <p>3. Алгоритм перевіряє сумісність сокетів, оперативної пам'яті (DDR4/DDR5), потужність блока живлення та дає змогу замінити будь-яку деталь на сумісну.</p>
         </div>
     </div>
 </div>
@@ -378,5 +484,8 @@
         </div>
     </div>
 </div>
+
+<!-- Контейнер сповіщень -->
+<div id="pcpToastContainer" class="pcp-toast-container" aria-live="polite"></div>
 </body>
 </html>
