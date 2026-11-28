@@ -97,27 +97,58 @@ document.addEventListener('DOMContentLoaded', () => {
         style.textContent = `
             .scenario-section {
                 padding-top: 14px;
-                border-top: 1px solid var(--border, #282E3A);
+                border-top: 1px solid #282E3A;
+            }
+            [data-theme="light"] .scenario-section {
+                border-top-color: #E2E8F0;
+            }
+            .form-card.is-compact .scenario-section {
+                padding-top: 0;
+                border-top: none;
+            }
+            .form-card.is-compact .scenario-section .brand-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .scenario-section .brand-row__chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
             }
             .scenario-chip {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
                 height: 36px;
                 padding: 0 14px;
                 border-radius: 999px;
-                border: 1px solid var(--border, #282E3A);
-                background: var(--surface-2, #1D222B);
-                color: var(--text, #F2F4F8);
+                border: 1px solid #282E3A;
+                background: #161B22;
+                color: #F2F4F8;
                 font-family: inherit;
                 font-size: 13px;
                 font-weight: 600;
+                line-height: 1;
+                white-space: nowrap;
                 cursor: pointer;
                 transition: border-color 0.2s, background-color 0.2s, color 0.2s;
             }
             .scenario-chip:hover {
-                border-color: var(--accent, #B6F24A);
+                border-color: #B6F24A;
             }
-            .scenario-chip.is-selected {
-                background: var(--accent, #B6F24A);
-                border-color: var(--accent, #B6F24A);
+            [data-theme="light"] .scenario-chip {
+                border-color: #CBD5E1;
+                background: #F1F5F9;
+                color: #0F172A;
+            }
+            [data-theme="light"] .scenario-chip:hover {
+                border-color: #65A30D;
+            }
+            .scenario-chip.is-selected,
+            [data-theme="light"] .scenario-chip.is-selected {
+                background: #B6F24A;
+                border-color: #B6F24A;
                 color: #0E1116;
             }
             .part-row__right {
@@ -134,18 +165,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 height: 24px;
                 padding: 0 8px;
                 border-radius: 6px;
-                border: 1px solid var(--border, #282E3A);
+                border: 1px solid #282E3A;
                 background: transparent;
-                color: var(--text-muted, #939AA8);
+                color: #939AA8;
                 font-family: inherit;
                 font-size: 11px;
                 font-weight: 600;
+                white-space: nowrap;
                 cursor: pointer;
                 transition: border-color 0.2s, color 0.2s, background-color 0.2s;
             }
             .part-row__replace-btn:hover {
-                border-color: var(--accent, #B6F24A);
-                color: var(--accent, #B6F24A);
+                border-color: #B6F24A;
+                color: #B6F24A;
+            }
+            [data-theme="light"] .part-row__replace-btn {
+                border-color: #CBD5E1;
+                color: #475569;
             }
             [data-theme="light"] .part-row__replace-btn:hover {
                 border-color: #4F770A;
@@ -166,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 font-family: 'JetBrains Mono', monospace;
                 font-size: 11px;
                 font-weight: 700;
+                white-space: nowrap;
             }
             .alt-diff-pill--cheaper {
                 background: rgba(34, 197, 94, 0.14);
@@ -176,14 +213,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 color: #EF4444;
             }
             .alt-diff-pill--same {
-                background: var(--surface-2, #1D222B);
-                color: var(--text-muted, #939AA8);
+                background: rgba(148, 163, 184, 0.14);
+                color: #939AA8;
             }
             .replace-empty-note {
                 padding: 20px;
                 text-align: center;
-                color: var(--text-muted, #939AA8);
+                color: #939AA8;
                 font-size: 14px;
+            }
+            @media (max-width: 480px) {
+                .scenario-section .brand-row {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 8px;
+                }
+                .scenario-chip {
+                    height: 34px;
+                    padding: 0 12px;
+                    font-size: 12px;
+                }
+                .part-row {
+                    gap: 8px;
+                }
+                .part-row__name {
+                    font-size: 13px;
+                }
             }
         `;
         document.head.appendChild(style);
