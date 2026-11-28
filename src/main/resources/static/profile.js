@@ -3,6 +3,25 @@
     const USER_KEY = 'pcpicker_user';
     const BASE_URL = ((window.PCPICKER_CONFIG && window.PCPICKER_CONFIG.apiBaseUrl) || '').replace(/\/+$/, '');
 
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const STRONG_PASSWORD_REGEX = /^(?=.*[A-Za-zА-Яа-яІіЇїЄєҐґ])(?=.*\d).{8,}$/;
+
+    const EYE_OPEN_SVG = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+    `;
+
+    const EYE_OFF_SVG = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+        </svg>
+    `;
+
     function buildApiUrl(path) {
         if (/^https?:\/\//i.test(path)) return path;
         const normalized = path.startsWith('/') ? path : `/${path}`;
@@ -14,6 +33,42 @@
         const style = document.createElement('style');
         style.id = 'pcpEditModalDynamicStyles';
         style.textContent = `
+            .pcp-password-wrap {
+                position: relative;
+                display: flex;
+                align-items: center;
+                width: 100%;
+            }
+            .pcp-password-wrap input {
+                width: 100% !important;
+                padding-right: 44px !important;
+            }
+            .pcp-password-toggle {
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+                padding: 0;
+                border: none;
+                border-radius: 8px;
+                background: transparent;
+                color: var(--pcp-text-muted, #939AA8);
+                cursor: pointer;
+                transition: color 0.2s, background-color 0.2s;
+            }
+            .pcp-password-toggle:hover {
+                color: var(--pcp-accent, #B6F02B);
+                background: rgba(255, 255, 255, 0.05);
+            }
+            [data-theme="light"] .pcp-password-toggle:hover {
+                color: #3D5E06;
+                background: rgba(15, 23, 42, 0.06);
+            }
             .saved-card-actions.saved-card-actions--three {
                 display: grid !important;
                 grid-template-columns: 1fr 1fr !important;
@@ -164,6 +219,71 @@
         return item?.componentName || item?.name || 'Комплектуюча';
     }
 
+    function getOrCreateEmailErrorEl() {
+        let el = document.getElementById('authEmailError');
+        if (!el) {
+            const emailInput = document.getElementById('authEmailInput');
+            if (emailInput && emailInput.parentElement) {
+                el = document.createElement('span');
+                el.id = 'authEmailError';
+                el.className = 'auth-field-error';
+                el.hidden = true;
+                el.textContent = 'Введіть коректний email (наприклад, name@gmail.com)';
+                emailInput.parentElement.appendChild(el);
+            }
+        }
+        return el;
+    }
+
+    function setupPasswordVisibilityToggle() {
+        const passwordInput = document.getElementById('authPasswordInput');
+        if (!passwordInput || document.getElementById('togglePasswordVisibilityBtn')) return;
+
+        const parent = passwordInput.parentElement;
+        if (!parent) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'pcp-password-wrap';
+        parent.insertBefore(wrapper, passwordInput);
+        wrapper.appendChild(passwordInput);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.id = 'togglePasswordVisibilityBtn';
+        toggleBtn.className = 'pcp-password-toggle';
+        toggleBtn.setAttribute('aria-label', 'Показати пароль');
+        toggleBtn.setAttribute('aria-pressed', 'false');
+        toggleBtn.title = 'Показати пароль';
+        toggleBtn.innerHTML = EYE_OPEN_SVG;
+
+        toggleBtn.addEventListener('click', () => {
+            const isCurrentlyHidden = passwordInput.type === 'password';
+            passwordInput.type = isCurrentlyHidden ? 'text' : 'password';
+            toggleBtn.innerHTML = isCurrentlyHidden ? EYE_OFF_SVG : EYE_OPEN_SVG;
+            const label = isCurrentlyHidden ? 'Сховати пароль' : 'Показати пароль';
+            toggleBtn.setAttribute('aria-label', label);
+            toggleBtn.setAttribute('aria-pressed', String(isCurrentlyHidden));
+            toggleBtn.title = label;
+            passwordInput.focus();
+        });
+
+        wrapper.appendChild(toggleBtn);
+    }
+
+    function resetPasswordVisibility() {
+        const passwordInput = document.getElementById('authPasswordInput');
+        const toggleBtn = document.getElementById('togglePasswordVisibilityBtn');
+        if (passwordInput) {
+            passwordInput.type = 'password';
+        }
+        if (toggleBtn) {
+            toggleBtn.innerHTML = EYE_OPEN_SVG;
+            toggleBtn.setAttribute('aria-label', 'Показати пароль');
+            toggleBtn.setAttribute('aria-pressed', 'false');
+            toggleBtn.title = 'Показати пароль';
+        }
+    }
+
     function showToast(message) {
         const container = document.getElementById('pcpToastContainer');
         if (!container) return;
@@ -275,11 +395,16 @@
         const nameGroup = document.getElementById('authNameGroup');
         const submitBtn = document.getElementById('authSubmitBtn');
         const switchBtn = document.getElementById('authSwitchModeBtn');
+        const emailInput = document.getElementById('authEmailInput');
+        const emailErr = getOrCreateEmailErrorEl();
         const passwordInput = document.getElementById('authPasswordInput');
         const passwordErr = document.getElementById('authPasswordError');
         const serverErr = document.getElementById('authServerError');
 
         if (!modal) return;
+
+        setupPasswordVisibilityToggle();
+        resetPasswordVisibility();
 
         document.querySelectorAll('.auth-tab').forEach((tab) => {
             tab.classList.toggle('active', tab.dataset.authTab === mode);
@@ -290,8 +415,15 @@
         nameGroup.hidden = !isRegister;
         submitBtn.textContent = isRegister ? 'Створити акаунт' : 'Увійти';
         switchBtn.textContent = isRegister ? 'Вже є акаунт? Увійти' : 'Немає акаунта? Зареєструватися';
+
+        if (emailInput) emailInput.classList.remove('input-invalid');
+        if (emailErr) emailErr.hidden = true;
+
         passwordInput.setAttribute('autocomplete', isRegister ? 'new-password' : 'current-password');
         passwordInput.classList.remove('input-invalid');
+        passwordErr.textContent = isRegister
+            ? 'Мінімум 8 символів, хоча б 1 літера та 1 цифра'
+            : 'Мінімум 8 символів';
         passwordErr.hidden = true;
         serverErr.hidden = true;
 
@@ -302,7 +434,54 @@
     function closeAuthModal() {
         const modal = document.getElementById('authModal');
         if (modal) modal.hidden = true;
+        resetPasswordVisibility();
         document.body.style.overflow = '';
+    }
+
+    function validateAuthForm(email, password, isRegister) {
+        const emailInput = document.getElementById('authEmailInput');
+        const emailErr = getOrCreateEmailErrorEl();
+        const passwordInput = document.getElementById('authPasswordInput');
+        const passwordErr = document.getElementById('authPasswordError');
+
+        let firstInvalidEl = null;
+
+        if (!EMAIL_REGEX.test(email)) {
+            emailInput?.classList.add('input-invalid');
+            if (emailErr) {
+                emailErr.textContent = 'Введіть коректний email (наприклад, name@gmail.com)';
+                emailErr.hidden = false;
+            }
+            firstInvalidEl = emailInput;
+        } else {
+            emailInput?.classList.remove('input-invalid');
+            if (emailErr) emailErr.hidden = true;
+        }
+
+        const isPasswordValid = isRegister
+            ? STRONG_PASSWORD_REGEX.test(password)
+            : password.length >= 8;
+
+        if (!isPasswordValid) {
+            passwordInput?.classList.add('input-invalid');
+            if (passwordErr) {
+                passwordErr.textContent = isRegister
+                    ? 'Мінімум 8 символів, хоча б 1 літера та 1 цифра'
+                    : 'Мінімум 8 символів';
+                passwordErr.hidden = false;
+            }
+            if (!firstInvalidEl) firstInvalidEl = passwordInput;
+        } else {
+            passwordInput?.classList.remove('input-invalid');
+            if (passwordErr) passwordErr.hidden = true;
+        }
+
+        if (firstInvalidEl) {
+            firstInvalidEl.focus();
+            return false;
+        }
+
+        return true;
     }
 
     async function handleAuthSubmit(event) {
@@ -310,27 +489,31 @@
         const nameInput = document.getElementById('authNameInput');
         const emailInput = document.getElementById('authEmailInput');
         const passwordInput = document.getElementById('authPasswordInput');
-        const passwordErr = document.getElementById('authPasswordError');
         const serverErr = document.getElementById('authServerError');
         const submitBtn = document.getElementById('authSubmitBtn');
+
+        if (!submitBtn || submitBtn.disabled) return;
 
         const email = emailInput.value.trim();
         const password = passwordInput.value;
         const name = nameInput.value.trim();
+        const isRegister = state.authMode === 'register';
 
-        passwordInput.classList.remove('input-invalid');
-        passwordErr.hidden = true;
         serverErr.hidden = true;
 
-        if (password.length < 8) {
-            passwordInput.classList.add('input-invalid');
-            passwordErr.hidden = false;
+        if (!validateAuthForm(email, password, isRegister)) {
             return;
         }
 
         submitBtn.disabled = true;
+        const defaultBtnLabel = isRegister ? 'Створити акаунт' : 'Увійти';
+        const wakeTimer = setTimeout(() => {
+            if (submitBtn && submitBtn.disabled) {
+                submitBtn.textContent = 'Сервер прокидається (до 30 с)...';
+            }
+        }, 3500);
+
         try {
-            const isRegister = state.authMode === 'register';
             const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
             const body = isRegister ? { name, email, password } : { email, password };
 
@@ -370,7 +553,9 @@
             serverErr.textContent = err.message;
             serverErr.hidden = false;
         } finally {
+            clearTimeout(wakeTimer);
             submitBtn.disabled = false;
+            submitBtn.textContent = defaultBtnLabel;
         }
     }
 
@@ -748,6 +933,7 @@
 
     async function init() {
         injectEditModalStyles();
+        setupPasswordVisibilityToggle();
         renderHeaderProfile();
 
         document.getElementById('closeAuthModalBtn')?.addEventListener('click', closeAuthModal);
@@ -770,8 +956,26 @@
             openAuthModal(state.authMode === 'login' ? 'register' : 'login');
         });
 
+        const emailInput = document.getElementById('authEmailInput');
+        const passwordInput = document.getElementById('authPasswordInput');
+
+        emailInput?.addEventListener('input', () => {
+            emailInput.classList.remove('input-invalid');
+            const emailErr = getOrCreateEmailErrorEl();
+            if (emailErr) emailErr.hidden = true;
+            const serverErr = document.getElementById('authServerError');
+            if (serverErr) serverErr.hidden = true;
+        });
+
+        passwordInput?.addEventListener('input', () => {
+            passwordInput.classList.remove('input-invalid');
+            const passwordErr = document.getElementById('authPasswordError');
+            if (passwordErr) passwordErr.hidden = true;
+            const serverErr = document.getElementById('authServerError');
+            if (serverErr) serverErr.hidden = true;
+        });
+
         document.getElementById('authForm')?.addEventListener('submit', handleAuthSubmit);
-        document.getElementById('authSubmitBtn')?.addEventListener('click', handleAuthSubmit);
         document.getElementById('closeMyBuildsBtn')?.addEventListener('click', closeMyBuildsView);
 
         document.querySelectorAll('#myBuildsFilters .filter-pill').forEach((pill) => {

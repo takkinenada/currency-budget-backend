@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
+
+
+    <link rel="stylesheet" href="/style.css?v=2">
+    <link rel="stylesheet" href="/profile.css?v=2">
+    <script src="/app.js?v=9" defer></script>
+    <script src="/profile.js?v=3" defer></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0E1116" id="metaThemeColor">
@@ -384,12 +391,13 @@
             <div class="auth-field">
                 <label for="authEmailInput">EMAIL</label>
                 <input type="email" id="authEmailInput" name="email" placeholder="example@gmail.com" required autocomplete="email">
+                <span id="authEmailError" class="auth-field-error" hidden>Введіть коректний email (наприклад, name@gmail.com)</span>
             </div>
 
             <div class="auth-field">
                 <label for="authPasswordInput">ПАРОЛЬ</label>
                 <input type="password" id="authPasswordInput" name="password" placeholder="••••••••" required autocomplete="current-password">
-                <span id="authPasswordError" class="auth-field-error" hidden>Мінімум 8 символів</span>
+                <span id="authPasswordError" class="auth-field-error" hidden>Мінімум 8 символів, хоча б 1 літера та 1 цифра</span>
             </div>
 
             <div id="authServerError" class="auth-server-error" hidden></div>
